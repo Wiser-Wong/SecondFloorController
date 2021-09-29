@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.wiser.secondfloor.SecondFloorController xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/controller"
+    tools:context=".MainActivity"
+    xmlns:sfc="http://schemas.android.com/apk/res-auto"
+    sfc:sfc_friction_value="1.5"
+    sfc:sfc_pull_refresh_distance="130dp"
+    sfc:sfc_pull_into_two_floor_distance="250dp"
+    sfc:sfc_is_intercept_one_floor_touch="false"
+    sfc:sfc_overlap_distance="0dp"
+    sfc:sfc_show_item="sfc_one_floor">
+
+</com.wiser.secondfloor.SecondFloorController>
