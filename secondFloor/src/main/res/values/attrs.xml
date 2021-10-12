@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <declare-styleable name="SecondFloorController">
+    <declare-styleable name="SecondFloorOverController">
         <attr name="sfc_friction_value" format="float"/>
         <attr name="sfc_overlap_distance" format="dimension|float"/>
         <attr name="sfc_show_item" format="integer">
@@ -10,5 +10,7 @@
         <attr name="sfc_pull_refresh_distance" format="dimension|reference"/>
         <attr name="sfc_pull_into_two_floor_distance" format="dimension|reference"/>
         <attr name="sfc_is_intercept_one_floor_touch" format="boolean"/>
+        <attr name="sfc_is_refreshing_back_anim" format="boolean"/>
+        <attr name="sfc_is_over" format="boolean"/>
     </declare-styleable>
 </resources>
