@@ -266,7 +266,7 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
         initTranslationY = -screenHeight.toFloat() + overlapDistance
 
         if (isOver) {
-            oneFloorFrameLayout = OneFloorController(context)
+            oneFloorFrameLayout = OneFloorController(context, attrs)
             oneFloorFrameLayout?.layoutParams =
                 LayoutParams(LayoutParams.MATCH_PARENT, screenHeight)
         } else {

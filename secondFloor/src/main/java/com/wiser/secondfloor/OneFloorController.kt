@@ -1,6 +1,8 @@
 package com.wiser.secondfloor
 
 import android.content.Context
+import android.content.res.TypedArray
+import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.DecelerateInterpolator
@@ -17,7 +19,7 @@ import com.wiser.secondfloor.nineoldandroids.view.ViewPropertyAnimator
  *
  * 一楼触摸事件
  */
-class OneFloorController(context: Context) : FrameLayout(context, null) {
+class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(context, attrs) {
 
     /**
      * 屏幕高度
@@ -118,6 +120,36 @@ class OneFloorController(context: Context) : FrameLayout(context, null) {
      */
     private var onPullScrollListener: SecondFloorOverController.OnPullScrollListener? = null
 
+    init {
+        val ta: TypedArray =
+            context.obtainStyledAttributes(attrs, R.styleable.SecondFloorOverController)
+        frictionValue =
+            ta.getFloat(R.styleable.SecondFloorOverController_sfc_friction_value, frictionValue)
+        currentItemIndex =
+            ta.getInt(R.styleable.SecondFloorOverController_sfc_show_item, currentItemIndex)
+        pullRefreshMaxDistance = ta.getDimension(
+            R.styleable.SecondFloorOverController_sfc_pull_refresh_distance,
+            pullRefreshMaxDistance.toFloat()
+        )
+            .toInt()
+        continuePullIntoTwoFloorDistance = ta.getDimension(
+            R.styleable.SecondFloorOverController_sfc_pull_into_two_floor_distance,
+            continuePullIntoTwoFloorDistance.toFloat()
+        )
+            .toInt()
+        isInterceptOneFloorTouch = ta.getBoolean(
+            R.styleable.SecondFloorOverController_sfc_is_intercept_one_floor_touch,
+            isInterceptOneFloorTouch
+        )
+        isRefreshingBackAnim = ta.getBoolean(
+            R.styleable.SecondFloorOverController_sfc_is_refreshing_back_anim,
+            isRefreshingBackAnim
+        )
+        ta.recycle()
+
+        initTranslationY = -screenHeight.toFloat()
+    }
+
     fun initOneFloorController(
         headerFrameLayout: FrameLayout?,
         screenHeight: Int,
@@ -139,7 +171,7 @@ class OneFloorController(context: Context) : FrameLayout(context, null) {
         this.pullRefreshMaxDistance = pullRefreshMaxDistance
         this.continuePullIntoTwoFloorDistance = continuePullIntoTwoFloorDistance
 
-        when(currentItemIndex) {
+        when (currentItemIndex) {
             SecondFloorOverController.ONE_FLOOR_INDEX -> {
                 pullFloorStatus = SecondFloorOverController.PULL_ONE_FLOOR
             }
@@ -265,7 +297,7 @@ class OneFloorController(context: Context) : FrameLayout(context, null) {
                     )
                 }
             }
-            MotionEvent.ACTION_UP,MotionEvent.ACTION_POINTER_UP -> {
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
                 // 如果松开的时候处于进入二楼准备阶段，则进行刷新操作
                 if (refreshHeaderStatus == SecondFloorOverController.REFRESH_HEADER_TWO_FLOOR_PREPARE) {
                     setRefreshing()

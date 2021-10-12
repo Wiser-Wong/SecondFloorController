@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:sfc="http://schemas.android.com/apk/res-auto">
+
+    <com.wiser.secondfloor.OneFloorController
+        android:id="@+id/controller"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        sfc:sfc_friction_value="1.5"
+        sfc:sfc_is_intercept_one_floor_touch="false"
+        sfc:sfc_is_refreshing_back_anim="false"
+        sfc:sfc_pull_into_two_floor_distance="250dp"
+        sfc:sfc_pull_refresh_distance="130dp"
+        sfc:sfc_show_item="sfc_one_floor">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@mipmap/a"
+            android:scaleType="centerCrop"
+            android:adjustViewBounds="true"/>
+
+        <TextView
+            android:id="@+id/tv_pull_tip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="下拉更新"
+            android:textStyle="bold"
+            android:textSize="15sp"
+            android:textColor="#ffffff"
+            android:layout_marginTop="80dp"
+            android:layout_gravity="center|top"
+            android:alpha="0"/>
+
+    </com.wiser.secondfloor.OneFloorController>
+    
+</FrameLayout>
