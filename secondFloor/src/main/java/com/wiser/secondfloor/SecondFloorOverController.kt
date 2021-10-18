@@ -63,11 +63,6 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
     private var lastDownY = 0f
 
     /**
-     * 按下的距离
-     */
-    private var pressDownY = 0f
-
-    /**
      * 当前位置
      */
     private var currentItemIndex = ONE_FLOOR_INDEX
@@ -403,11 +398,6 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
                 touchY = event.rawY
                 refreshHeaderStatus = REFRESH_HEADER_NO
                 lastDownY = event.rawY
-                pressDownY = if (ViewHelper.getTranslationY(this) > 0) {
-                    (event.rawY - ViewHelper.getTranslationY(this)) / frictionValue
-                } else {
-                    event.rawY
-                }
             }
             if (event?.actionMasked == MotionEvent.ACTION_POINTER_DOWN) {
                 mScrollPointerId = event.getPointerId(actionIndex)
@@ -415,13 +405,6 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
                 touchY = event.getRawY(event.findPointerIndex(mScrollPointerId))
                 refreshHeaderStatus = REFRESH_HEADER_NO
                 lastDownY = event.getRawY(event.findPointerIndex(mScrollPointerId))
-                pressDownY = if (ViewHelper.getTranslationY(this) > 0) {
-                    (event.getRawY(event.findPointerIndex(mScrollPointerId)) - ViewHelper.getTranslationY(
-                        this
-                    )) / frictionValue
-                } else {
-                    event.getRawY(event.findPointerIndex(mScrollPointerId))
-                }
             }
             return if (recyclerView == null || !isDispatchTouch) true else super.dispatchTouchEvent(
                 event
@@ -435,11 +418,6 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
                 if (refreshHeaderStatus == REFRESH_HEADER_NO || refreshHeaderStatus == REFRESH_HEADER_END) {
                     refreshHeaderStatus = REFRESH_HEADER_NO
                     lastDownY = event.rawY
-                    pressDownY = if (ViewHelper.getTranslationY(this) > 0) {
-                        (event.rawY - ViewHelper.getTranslationY(this)) / frictionValue
-                    } else {
-                        event.rawY
-                    }
                 } else {
                     return if (recyclerView == null || !isDispatchTouch) true else super.dispatchTouchEvent(
                         event
@@ -451,7 +429,6 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
                 touchX = event.getRawX(event.findPointerIndex(mScrollPointerId))
                 touchY = event.getRawY(event.findPointerIndex(mScrollPointerId))
                 lastDownY = event.getRawY(event.findPointerIndex(mScrollPointerId))
-                pressDownY = event.getRawY(event.findPointerIndex(mScrollPointerId))
             }
             MotionEvent.ACTION_MOVE -> {
                 val index = event.findPointerIndex(mScrollPointerId)
@@ -614,7 +591,7 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
             )
             guideAnimator?.addUpdateListener {
                 val value: Float = it.animatedValue as Float
-                lastMoveDistanceY = value
+                lastMoveDistanceY = value - initTranslationY
                 // 下拉刷新开始
                 if ((value - initTranslationY) <= pullRefreshMaxDistance && refreshHeaderStatus != REFRESH_HEADER_PREPARE) {
                     refreshHeaderStatus = REFRESH_HEADER_PREPARE

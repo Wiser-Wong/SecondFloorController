@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     sfc:sfc_friction_value="1.5"
     sfc:sfc_is_intercept_one_floor_touch="false"
-    sfc:sfc_is_over="true"
+    sfc:sfc_is_over="false"
     sfc:sfc_is_refreshing_back_anim="true"
     sfc:sfc_overlap_distance="0dp"
     sfc:sfc_header_height="50dp"
