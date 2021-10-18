@@ -6,10 +6,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.widget.AppCompatImageView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager.widget.ViewPager
 import com.wiser.secondfloor.ScreenTools
 import com.wiser.secondfloor.SecondFloorOverController
 
@@ -32,7 +32,7 @@ class OneFloorFragment : Fragment() {
     }
 
     private fun initView(view: View?) {
-        val ivTop: AppCompatImageView? = view?.findViewById(R.id.iv_top)
+        val viewpager: ViewPager? = view?.findViewById(R.id.viewpager)
         val tipView = view?.findViewById<TextView>(R.id.tv_pull_tip)
 
         val recyclerView: RecyclerView? = view?.findViewById(R.id.rlv_one_floor)
@@ -41,6 +41,12 @@ class OneFloorFragment : Fragment() {
             adapter = OneFloorAdapter()
             parentFragment()?.getController()?.addRecyclerView(this)
         }
+
+        val fragments: MutableList<Fragment> = mutableListOf()
+        fragments.add(VpFragment.newInstance(R.mipmap.aa))
+        fragments.add(VpFragment.newInstance(R.mipmap.bb))
+        fragments.add(VpFragment.newInstance(R.mipmap.cc))
+        viewpager?.adapter = ViewPagerAdapter(fragments,childFragmentManager)
 
         parentFragment()?.getController()?.addOnPullScrollListener(object :
             SecondFloorOverController.OnPullScrollListener {
@@ -90,11 +96,11 @@ class OneFloorFragment : Fragment() {
                     when (status) {
                         SecondFloorOverController.PULL_ONE_FLOOR_RUNNING -> {
                             tipView?.visibility = View.INVISIBLE
-                            ivTop?.visibility = View.VISIBLE
+                            viewpager?.visibility = View.VISIBLE
                         }
                         SecondFloorOverController.PULL_SECOND_FLOOR -> {
                             tipView?.visibility = View.INVISIBLE
-                            ivTop?.visibility = View.INVISIBLE
+                            viewpager?.visibility = View.INVISIBLE
                         }
                     }
                 }
@@ -112,26 +118,4 @@ class OneFloorFragment : Fragment() {
         }
         return null
     }
-}
-
-class OneFloorAdapter : RecyclerView.Adapter<OneFloorAdapter.OneFloorHolder>() {
-
-
-    class OneFloorHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): OneFloorHolder {
-        return OneFloorHolder(
-            LayoutInflater.from(parent.context).inflate(R.layout.one_floor_item, parent, false)
-        )
-    }
-
-    override fun onBindViewHolder(holder: OneFloorHolder, position: Int) {
-        holder.itemView?.setOnClickListener {
-            Toast.makeText(holder.itemView.context,"位置：--->>$position",Toast.LENGTH_LONG).show()
-        }
-    }
-
-    override fun getItemCount(): Int = 50
 }

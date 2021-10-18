@@ -13,12 +13,12 @@ import com.wiser.secondfloor.SecondFloorOverController
 import com.wiser.secondfloor.nineoldandroids.animation.ValueAnimator
 import com.wiser.secondfloor.nineoldandroids.view.ViewHelper
 
-class MainFragment: Fragment() {
+class MainFragment : Fragment() {
 
     private var overController: SecondFloorOverController? = null
 
     companion object {
-        fun newInstance(): MainFragment{
+        fun newInstance(): MainFragment {
             return MainFragment()
         }
     }
@@ -35,12 +35,22 @@ class MainFragment: Fragment() {
 
     private fun initView(view: View?) {
         overController = view?.findViewById(R.id.controller)
-        val oneView = LayoutInflater.from(activity).inflate(R.layout.main_one_floor_layout, overController, false)
-        val twoView = LayoutInflater.from(activity).inflate(R.layout.main_two_floor_layout, overController, false)
+        val oneView = LayoutInflater.from(activity)
+            .inflate(R.layout.main_one_floor_layout, overController, false)
+        val twoView = LayoutInflater.from(activity)
+            .inflate(R.layout.main_two_floor_layout, overController, false)
         childFragmentManager.beginTransaction()
-            .replace(R.id.fl_controller_one_floor, OneFloorFragment.newInstance(), OneFloorFragment::javaClass.name).commitAllowingStateLoss()
+            .replace(
+                R.id.fl_controller_one_floor,
+                OneFloorFragment.newInstance(),
+                OneFloorFragment::javaClass.name
+            ).commitAllowingStateLoss()
         childFragmentManager.beginTransaction()
-            .replace(R.id.fl_controller_two_floor, TwoFloorFragment.newInstance(), TwoFloorFragment::javaClass.name).commitAllowingStateLoss()
+            .replace(
+                R.id.fl_controller_two_floor,
+                TwoFloorFragment.newInstance(),
+                TwoFloorFragment::javaClass.name
+            ).commitAllowingStateLoss()
         overController?.addOneFloorView(oneView)
         overController?.addTwoFloorView(twoView)
 
@@ -53,12 +63,14 @@ class MainFragment: Fragment() {
         }
 //        animator.start()
 
-        val headerView = LayoutInflater.from(activity).inflate(R.layout.pull_header, overController, false)
+        val headerView =
+            LayoutInflater.from(activity).inflate(R.layout.pull_header, overController, false)
         val tipView = headerView?.findViewById<TextView>(R.id.tv_pull_tip)
-//        controller?.addHeaderView(headerView)
-        overController?.addOnPullRefreshListener(object: SecondFloorOverController.OnPullRefreshListener{
+        overController?.addHeaderView(headerView)
+        overController?.addOnPullRefreshListener(object :
+            SecondFloorOverController.OnPullRefreshListener {
             override fun onPullStatus(status: Int) {
-                when(status) {
+                when (status) {
                     SecondFloorOverController.REFRESH_HEADER_PREPARE -> {
                         tipView?.text = "下拉刷新"
                     }
@@ -66,7 +78,7 @@ class MainFragment: Fragment() {
                         tipView?.text = "刷新中"
                         overController?.postDelayed(Runnable {
                             overController?.setRefreshComplete()
-                        },1500)
+                        }, 1500)
                     }
                     SecondFloorOverController.REFRESH_HEADER_END -> {
                         Toast.makeText(activity, "刷新数据了", Toast.LENGTH_SHORT).show()
@@ -84,12 +96,15 @@ class MainFragment: Fragment() {
 
             }
         })
-        overController?.addOnPullScrollListener(object : SecondFloorOverController.OnPullScrollListener {
+        overController?.addOnPullScrollListener(object :
+            SecondFloorOverController.OnPullScrollListener {
 
             override fun onPullScroll(scrollY: Float, scrollDistance: Float) {
                 println("滑动监听--->>$scrollY")
             }
         })
+
+        overController?.setGuideAnim()
 
         backPress(view)
     }
@@ -106,8 +121,11 @@ class MainFragment: Fragment() {
                     backOneFloor()
                 }
             } else {
-                if (event?.action == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
-                    activity?.finish()
+                if (overController?.getCurrentItemIndex() == SecondFloorOverController.ONE_FLOOR_INDEX) {
+                    if (event?.action == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
+                        overController?.setGuideAnim()
+//                        activity?.finish()
+                    }
                 }
             }
             true

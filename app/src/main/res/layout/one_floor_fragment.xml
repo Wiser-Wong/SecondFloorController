@@ -10,18 +10,11 @@
         android:layout_width="match_parent"
         android:layout_height="200dp">
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/iv_top"
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:adjustViewBounds="true"
-            android:src="@mipmap/b"
-            android:scaleType="centerCrop"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
 
-        </androidx.appcompat.widget.AppCompatImageView>
+        <androidx.viewpager.widget.ViewPager
+            android:id="@+id/viewpager"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"/>
 
         <TextView
             android:id="@+id/tv_pull_tip"

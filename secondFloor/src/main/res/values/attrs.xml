@@ -3,6 +3,7 @@
     <declare-styleable name="SecondFloorOverController">
         <attr name="sfc_friction_value" format="float"/>
         <attr name="sfc_overlap_distance" format="dimension|float"/>
+        <attr name="sfc_header_height" format="dimension|float"/>
         <attr name="sfc_show_item" format="integer">
             <enum name="sfc_one_floor" value="0"/>
             <enum name="sfc_two_floor" value="1"/>

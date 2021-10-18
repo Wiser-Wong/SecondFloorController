@@ -8,6 +8,9 @@ import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager.widget.ViewPager
 import com.wiser.secondfloor.OneFloorController
 import com.wiser.secondfloor.ScreenTools
 import com.wiser.secondfloor.SecondFloorOverController
@@ -34,7 +37,10 @@ class TestFragment : Fragment() {
 
     private fun initView(view: View?) {
         val tipView = view?.findViewById<TextView>(R.id.tv_pull_tip)
+        val rlv = view?.findViewById<RecyclerView>(R.id.rlv_one_floor)
+        val viewpager: ViewPager? = view?.findViewById(R.id.viewpager)
         controller = view?.findViewById(R.id.controller)
+        controller?.addRecyclerView(rlv)
         controller?.addOnPullScrollListener(object :
             SecondFloorOverController.OnPullScrollListener {
             override fun onPullScroll(scrollY: Float, scrollDistance: Float) {
@@ -90,6 +96,15 @@ class TestFragment : Fragment() {
                     }
                 }
             })
+
+        val fragments: MutableList<Fragment> = mutableListOf()
+        fragments.add(VpFragment.newInstance(R.mipmap.aa))
+        fragments.add(VpFragment.newInstance(R.mipmap.bb))
+        fragments.add(VpFragment.newInstance(R.mipmap.cc))
+        viewpager?.adapter = ViewPagerAdapter(fragments,childFragmentManager)
+
+        rlv?.layoutManager = LinearLayoutManager(context)
+        rlv?.adapter = OneFloorAdapter()
 
         backPress(view)
     }

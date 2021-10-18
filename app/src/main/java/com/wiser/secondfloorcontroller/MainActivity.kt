@@ -11,8 +11,8 @@ class MainActivity : AppCompatActivity() {
 
 //        ViewPropertyAnimator.animate(findViewById(R.id.btn)).y(100f).setDuration(2000).start()
 
-//        supportFragmentManager.beginTransaction().replace(R.id.fl_main_controller, MainFragment.newInstance(), MainFragment::javaClass.name).commitAllowingStateLoss()
-        supportFragmentManager.beginTransaction().replace(R.id.fl_main_controller, TestFragment.newInstance(), TestFragment::javaClass.name).commitAllowingStateLoss()
+        supportFragmentManager.beginTransaction().replace(R.id.fl_main_controller, MainFragment.newInstance(), MainFragment::javaClass.name).commitAllowingStateLoss()
+//        supportFragmentManager.beginTransaction().replace(R.id.fl_main_controller, TestFragment.newInstance(), TestFragment::javaClass.name).commitAllowingStateLoss()
     }
 
 }

@@ -2,9 +2,11 @@ package com.wiser.secondfloor
 
 import android.content.Context
 import android.content.res.TypedArray
+import android.os.Handler
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
 import androidx.recyclerview.widget.RecyclerView
@@ -13,6 +15,7 @@ import com.wiser.secondfloor.nineoldandroids.animation.AnimatorListenerAdapter
 import com.wiser.secondfloor.nineoldandroids.animation.ValueAnimator
 import com.wiser.secondfloor.nineoldandroids.view.ViewHelper
 import com.wiser.secondfloor.nineoldandroids.view.ViewPropertyAnimator
+import kotlin.math.abs
 
 /**
  * @author Wiser
@@ -45,6 +48,8 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
      * 按下的距离
      */
     private var pressDownY = 0f
+
+    private var lastMoveDistanceY = 0f
 
     /**
      * 当前位置
@@ -120,6 +125,29 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
      */
     private var onPullScrollListener: SecondFloorOverController.OnPullScrollListener? = null
 
+    /**
+     * 引导动画
+     */
+    private var guideAnimator: ValueAnimator? = null
+
+    /**
+     * 是否向下引导，因为引导动画执行是先向下然后向上
+     */
+    private var isDownGuide = true
+
+    /**
+     * 是否引导状态
+     */
+    private var isGuideStatus = false
+
+    private val mTouchSlop = ViewConfiguration.get(getContext()).scaledTouchSlop
+
+    private var mScrollPointerId: Int = -1
+
+    private var touchX = 0f
+
+    private var touchY = 0f
+
     init {
         val ta: TypedArray =
             context.obtainStyledAttributes(attrs, R.styleable.SecondFloorOverController)
@@ -130,13 +158,15 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
         pullRefreshMaxDistance = ta.getDimension(
             R.styleable.SecondFloorOverController_sfc_pull_refresh_distance,
             pullRefreshMaxDistance.toFloat()
-        )
-            .toInt()
+        ).toInt()
+        headerHeight = ta.getDimension(
+            R.styleable.SecondFloorOverController_sfc_header_height,
+            headerHeight.toFloat()
+        ).toInt()
         continuePullIntoTwoFloorDistance = ta.getDimension(
             R.styleable.SecondFloorOverController_sfc_pull_into_two_floor_distance,
             continuePullIntoTwoFloorDistance.toFloat()
-        )
-            .toInt()
+        ).toInt()
         isInterceptOneFloorTouch = ta.getBoolean(
             R.styleable.SecondFloorOverController_sfc_is_intercept_one_floor_touch,
             isInterceptOneFloorTouch
@@ -159,7 +189,8 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
         isRefreshingBackAnim: Boolean,
         initTranslationY: Float,
         pullRefreshMaxDistance: Int,
-        continuePullIntoTwoFloorDistance: Int
+        continuePullIntoTwoFloorDistance: Int,
+        headerHeight: Int
     ) {
         this.headerFrameLayout = headerFrameLayout
         this.screenHeight = screenHeight
@@ -170,6 +201,7 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
         this.initTranslationY = initTranslationY
         this.pullRefreshMaxDistance = pullRefreshMaxDistance
         this.continuePullIntoTwoFloorDistance = continuePullIntoTwoFloorDistance
+        this.headerHeight = headerHeight
 
         when (currentItemIndex) {
             SecondFloorOverController.ONE_FLOOR_INDEX -> {
@@ -211,18 +243,20 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
         }
     }
 
-    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+    override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
+        closeGuideAnim()
         if (refreshHeaderStatus == SecondFloorOverController.REFRESH_HEADER_RUNNING || pullFloorStatus == SecondFloorOverController.PULL_ONE_FLOOR_RUNNING) {
             return false
         }
         return if (getCurrentItemIndex() == SecondFloorOverController.ONE_FLOOR_INDEX && isSlidingTop && !isAnimRunning) {
-            onFloorTouch(ev, true)
+            onFloorTouch(event, true)
         } else {
-            super.dispatchTouchEvent(ev)
+            super.dispatchTouchEvent(event)
         }
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
+        closeGuideAnim()
         if (refreshHeaderStatus == SecondFloorOverController.REFRESH_HEADER_RUNNING || pullFloorStatus == SecondFloorOverController.PULL_ONE_FLOOR_RUNNING) {
             return false
         }
@@ -237,38 +271,87 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
      * 一楼事件处理
      */
     private fun onFloorTouch(event: MotionEvent?, isDispatchTouch: Boolean): Boolean {
-        if (isInterceptOneFloorTouch || refreshHeaderStatus == SecondFloorOverController.REFRESH_HEADER_RUNNING) return if (recyclerView == null || !isDispatchTouch) false else super.dispatchTouchEvent(
+        if (isInterceptOneFloorTouch || refreshHeaderStatus == SecondFloorOverController.REFRESH_HEADER_RUNNING) return if (recyclerView == null || !isDispatchTouch) true else super.dispatchTouchEvent(
             event
         )
-        when (event?.action) {
+        val actionIndex = event?.actionIndex ?: 0
+        if (!isTouchEvent(event) && ViewHelper.getTranslationY(this) == 0f) {
+            if (event?.actionMasked == MotionEvent.ACTION_DOWN) {
+                mScrollPointerId = event.getPointerId(0)
+                touchX = event.rawX
+                touchY = event.rawY
+                refreshHeaderStatus = SecondFloorOverController.REFRESH_HEADER_NO
+                lastDownY = event.rawY
+                pressDownY = if (ViewHelper.getTranslationY(this) > 0) {
+                    (event.rawY - ViewHelper.getTranslationY(this)) / frictionValue
+                } else {
+                    event.rawY
+                }
+            }
+            if (event?.actionMasked == MotionEvent.ACTION_POINTER_DOWN) {
+                mScrollPointerId = event.getPointerId(actionIndex)
+                touchX = event.getRawX(event.findPointerIndex(mScrollPointerId))
+                touchY = event.getRawY(event.findPointerIndex(mScrollPointerId))
+                refreshHeaderStatus = SecondFloorOverController.REFRESH_HEADER_NO
+                lastDownY = event.getRawY(event.findPointerIndex(mScrollPointerId))
+                pressDownY = if (ViewHelper.getTranslationY(this) > 0) {
+                    (event.getRawY(event.findPointerIndex(mScrollPointerId)) - ViewHelper.getTranslationY(
+                        this
+                    )) / frictionValue
+                } else {
+                    event.getRawY(event.findPointerIndex(mScrollPointerId))
+                }
+            }
+            return if (recyclerView == null || !isDispatchTouch) true else super.dispatchTouchEvent(
+                event
+            )
+        }
+        when (event?.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
+                mScrollPointerId = event.getPointerId(0)
+                touchX = event.rawX
+                touchY = event.rawY
                 if (refreshHeaderStatus == SecondFloorOverController.REFRESH_HEADER_NO || refreshHeaderStatus == SecondFloorOverController.REFRESH_HEADER_END) {
                     refreshHeaderStatus = SecondFloorOverController.REFRESH_HEADER_NO
                     lastDownY = event.rawY
-                    pressDownY = event.rawY
+                    pressDownY = if (ViewHelper.getTranslationY(this) > 0) {
+                        (event.rawY - ViewHelper.getTranslationY(this)) / frictionValue
+                    } else {
+                        event.rawY
+                    }
                 } else {
                     return if (recyclerView == null || !isDispatchTouch) true else super.dispatchTouchEvent(
                         event
                     )
                 }
             }
+            MotionEvent.ACTION_POINTER_DOWN -> {
+                mScrollPointerId = event.getPointerId(actionIndex)
+                touchX = event.getRawX(event.findPointerIndex(mScrollPointerId))
+                touchY = event.getRawY(event.findPointerIndex(mScrollPointerId))
+                lastDownY = event.getRawY(event.findPointerIndex(mScrollPointerId))
+                pressDownY = event.getRawY(event.findPointerIndex(mScrollPointerId))
+            }
             MotionEvent.ACTION_MOVE -> {
+                val index = event.findPointerIndex(mScrollPointerId)
+                if (index < 0) return false
                 recyclerView?.parent?.requestDisallowInterceptTouchEvent(false)
-                val moveY = (event.rawY - lastDownY) / frictionValue
-                lastDownY = event.rawY
+                val moveY = (event.getRawY(index) - lastDownY) / frictionValue
                 // 底部临界
                 if (ViewHelper.getTranslationY(this) + moveY <= 0) {
                     ViewHelper.setTranslationY(this, 0f)
                 } else {
-                    // 滑动监听
-                    onPullScrollListener?.onPullScroll(
-                        (event.rawY - pressDownY) / frictionValue,
-                        moveY
-                    )
                     // 滑动显示头部布局
                     setHeaderVisible(true)
-                    val moveDistanceY = event.rawY - pressDownY
-
+                    val moveDistanceY =
+                        lastMoveDistanceY + (event.getRawY(index) - lastDownY) / frictionValue
+                    lastMoveDistanceY = moveDistanceY
+                    lastDownY = event.getRawY(index)
+                    // 滑动监听
+                    onPullScrollListener?.onPullScroll(
+                        moveDistanceY,
+                        moveY
+                    )
                     // 下拉刷新开始
                     if (moveDistanceY <= pullRefreshMaxDistance && refreshHeaderStatus != SecondFloorOverController.REFRESH_HEADER_PREPARE) {
                         refreshHeaderStatus = SecondFloorOverController.REFRESH_HEADER_PREPARE
@@ -297,7 +380,8 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
                     )
                 }
             }
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
+            MotionEvent.ACTION_UP -> {
+                lastMoveDistanceY = 0f
                 // 如果松开的时候处于进入二楼准备阶段，则进行刷新操作
                 if (refreshHeaderStatus == SecondFloorOverController.REFRESH_HEADER_TWO_FLOOR_PREPARE) {
                     setRefreshing()
@@ -305,12 +389,20 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
                     // 当处于1楼的时候
                     if (currentItemIndex == SecondFloorOverController.ONE_FLOOR_INDEX) {
                         // 如果松开的距离大于进入二楼临界值时，直接进入二楼，否则回到一楼
-                        if (event.rawY - pressDownY > continuePullIntoTwoFloorDistance) {
+                        if (refreshHeaderStatus == SecondFloorOverController.REFRESH_HEADER_TWO_FLOOR_RUNNING) {
                             setCurrentItem(SecondFloorOverController.TWO_FLOOR_INDEX)
                         } else {
                             setCurrentItem(SecondFloorOverController.ONE_FLOOR_INDEX)
                         }
                     }
+                }
+            }
+            MotionEvent.ACTION_POINTER_UP -> {
+
+            }
+            MotionEvent.ACTION_CANCEL -> {
+                if (refreshHeaderStatus != SecondFloorOverController.REFRESH_HEADER_RUNNING) {
+                    setCurrentItem(SecondFloorOverController.ONE_FLOOR_INDEX, false)
                 }
             }
         }
@@ -319,17 +411,37 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
         )
     }
 
-    override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
+    override fun onInterceptTouchEvent(event: MotionEvent?): Boolean {
         if (recyclerView == null || getCurrentItemIndex() == SecondFloorOverController.TWO_FLOOR_INDEX) return super.onInterceptTouchEvent(
             event
         )
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> isIntercept = false
-            MotionEvent.ACTION_MOVE -> isIntercept =
-                ViewHelper.getTranslationY(this) > 0f && isSlidingTop
+        val actionIndex = event?.actionIndex ?: 0
+        when (event?.actionMasked) {
+            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
+                mScrollPointerId = event.getPointerId(actionIndex)
+                touchX = event.getRawX(event.findPointerIndex(mScrollPointerId))
+                touchY = event.getRawY(event.findPointerIndex(mScrollPointerId))
+                isIntercept = false
+            }
+            MotionEvent.ACTION_MOVE -> {
+                isIntercept =
+                    ViewHelper.getTranslationY(this) > 0f && isSlidingTop && isTouchEvent(event)
+            }
             MotionEvent.ACTION_UP -> isIntercept = false
         }
         return isIntercept
+    }
+
+    private fun isTouchEvent(event: MotionEvent?): Boolean {
+        val index = event?.findPointerIndex(mScrollPointerId) ?: -1
+        if (index < 0) {
+            return false
+        }
+        val x = event?.getRawX(index) ?: 0f
+        val y = event?.getRawY(index) ?: 0f
+        val dx = x - touchX
+        val dy = y - touchY
+        return abs(dy) > mTouchSlop && abs(dy) >= abs(dx)
     }
 
     /**
@@ -343,13 +455,13 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
             val animator =
                 ValueAnimator.ofFloat(
                     ViewHelper.getTranslationY(this),
-                    initTranslationY + headerHeight
+                    headerHeight.toFloat()
                 )
             animator.addUpdateListener {
                 val value: Float = it.animatedValue as Float
                 ViewHelper.setTranslationY(this, value)
                 onPullScrollListener?.onPullScroll(
-                    screenHeight + value,
+                    value,
                     lastDistance - value
                 )
                 lastDistance = value
@@ -360,8 +472,109 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
         }
     }
 
+    /**
+     * 关闭引导动画
+     */
+    fun closeGuideAnim() {
+        if (isGuideStatus && guideAnimator != null) {
+            isGuideStatus = false
+            isDownGuide = false
+            guideAnimator?.cancel()
+        }
+    }
+
+    fun setGuideAnim() {
+        setGuideAnim(true, 400, 1500)
+    }
+
+    /**
+     * 设置引导动画
+     */
+    fun setGuideAnim(
+        isDown: Boolean = true,
+        transitionDuration: Long = 400,
+        stayDuration: Long = 1500
+    ) {
+        this.isDownGuide = isDown
+        this.isGuideStatus = true
+        lastDistance = ViewHelper.getTranslationY(this)
+        val lastValue = continuePullIntoTwoFloorDistance
+        if (guideAnimator == null) {
+            guideAnimator =
+                ValueAnimator.ofFloat(
+                    if (isDown) 0f else lastValue.toFloat(),
+                    if (isDown) lastValue.toFloat() else 0f
+                )
+        }
+        guideAnimator?.addUpdateListener {
+            val value: Float =
+                if (isDown) (it.animatedValue as Float) else (lastValue - it.animatedValue as Float)
+            lastMoveDistanceY = value
+            // 下拉刷新开始
+            if (value <= pullRefreshMaxDistance && refreshHeaderStatus != SecondFloorOverController.REFRESH_HEADER_PREPARE) {
+                refreshHeaderStatus = SecondFloorOverController.REFRESH_HEADER_PREPARE
+                onPullRefreshListener?.onPullStatus(SecondFloorOverController.REFRESH_HEADER_PREPARE)
+            }
+            // 进入二楼准备
+            if (value > pullRefreshMaxDistance && value <= continuePullIntoTwoFloorDistance && refreshHeaderStatus != SecondFloorOverController.REFRESH_HEADER_TWO_FLOOR_PREPARE) {
+                refreshHeaderStatus =
+                    SecondFloorOverController.REFRESH_HEADER_TWO_FLOOR_PREPARE
+                onPullRefreshListener?.onPullStatus(
+                    SecondFloorOverController.REFRESH_HEADER_TWO_FLOOR_PREPARE
+                )
+            }
+            // 松开进入二楼
+            if (value > continuePullIntoTwoFloorDistance && refreshHeaderStatus != SecondFloorOverController.REFRESH_HEADER_TWO_FLOOR_RUNNING) {
+                refreshHeaderStatus =
+                    SecondFloorOverController.REFRESH_HEADER_TWO_FLOOR_RUNNING
+                onPullRefreshListener?.onPullStatus(
+                    SecondFloorOverController.REFRESH_HEADER_TWO_FLOOR_RUNNING
+                )
+            }
+            ViewHelper.setTranslationY(this, value)
+            onPullScrollListener?.onPullScroll(
+                value,
+                lastDistance - value
+            )
+            lastDistance = value
+        }
+        guideAnimator?.addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: Animator?) {
+                super.onAnimationEnd(animation)
+                refreshHeaderStatus = SecondFloorOverController.REFRESH_HEADER_NO
+                if (isDownGuide) {
+                    Handler().postDelayed({
+                        if (isDownGuide) {
+                            setGuideAnim(false)
+                        }
+                    }, stayDuration)
+                } else {
+                    isGuideStatus = false
+                }
+            }
+
+            override fun onAnimationCancel(animation: Animator?) {
+                super.onAnimationCancel(animation)
+                refreshHeaderStatus = SecondFloorOverController.REFRESH_HEADER_NO
+                isDownGuide = false
+                isGuideStatus = false
+            }
+        })
+        guideAnimator?.interpolator = DecelerateInterpolator()
+        guideAnimator?.duration = transitionDuration
+        guideAnimator?.start()
+    }
+
     fun setCurrentItem(index: Int) {
         setCurrentItem(index, true)
+    }
+
+    fun setCurrentItem(index: Int, isScroll: Boolean) {
+        setCurrentItem(index, isScroll, 300)
+    }
+
+    fun setCurrentItem(index: Int, duration: Long) {
+        setCurrentItem(index, true, duration)
     }
 
     /**
@@ -371,11 +584,12 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
      *          是否滚动动画
      * 设置要显示的页面
      */
-    fun setCurrentItem(index: Int, isScroll: Boolean = true) {
+    fun setCurrentItem(index: Int, isScroll: Boolean = true, duration: Long = 300) {
         if (index > 1 || index < 0) return
         if (isAnimRunning) return
         this.isAnimRunning = true
         this.currentItemIndex = index
+        lastMoveDistanceY = 0f
         when (index) {
             SecondFloorOverController.ONE_FLOOR_INDEX -> { // 1楼
                 pullFloorStatus = SecondFloorOverController.PULL_ONE_FLOOR_RUNNING
@@ -388,23 +602,23 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
                     val value: Float = it.animatedValue as Float
                     ViewHelper.setTranslationY(this, value)
                     onPullScrollListener?.onPullScroll(
-                        screenHeight + value,
+                        value,
                         lastDistance - value
                     )
                     lastDistance = value
                 }
                 animator.interpolator = DecelerateInterpolator()
                 if (isScroll) {
-                    animator.duration = 300
+                    animator.duration = duration
                 } else {
                     animator.duration = 0
                 }
                 animator.addListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator?) {
                         super.onAnimationEnd(animation)
-                        refreshHeaderStatus = SecondFloorOverController.REFRESH_HEADER_NO
                         pullFloorStatus = SecondFloorOverController.PULL_ONE_FLOOR
                         onPullRefreshListener?.onPullFloorStatus(SecondFloorOverController.PULL_ONE_FLOOR)
+                        refreshHeaderStatus = SecondFloorOverController.REFRESH_HEADER_NO
                         isAnimRunning = false
                     }
                 })
@@ -418,16 +632,16 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
                 val animator = ViewPropertyAnimator.animate(this).y(-initTranslationY)
                 animator.setInterpolator(DecelerateInterpolator())
                 if (isScroll) {
-                    animator.duration = 300
+                    animator.duration = duration
                 } else {
                     animator.duration = 0
                 }
                 animator.setListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator?) {
                         super.onAnimationEnd(animation)
-                        refreshHeaderStatus = SecondFloorOverController.REFRESH_HEADER_NO
                         pullFloorStatus = SecondFloorOverController.PULL_SECOND_FLOOR
                         onPullRefreshListener?.onPullFloorStatus(SecondFloorOverController.PULL_SECOND_FLOOR)
+                        refreshHeaderStatus = SecondFloorOverController.REFRESH_HEADER_NO
                         isAnimRunning = false
                     }
                 })
@@ -478,6 +692,8 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
      * 获取当前下拉楼状态
      */
     fun getCurrentPullFloorStatus(): Int = pullFloorStatus
+
+    fun isGuideStatus(): Boolean = isGuideStatus
 
     /**
      * 如果要使用外部header需要将header高度传入
