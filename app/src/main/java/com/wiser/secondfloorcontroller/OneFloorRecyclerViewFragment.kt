@@ -1,7 +1,6 @@
 package com.wiser.secondfloorcontroller
 
 import android.os.Bundle
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,17 +10,14 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
-import com.wiser.secondfloor.OneFloorController
 import com.wiser.secondfloor.ScreenTools
 import com.wiser.secondfloor.SecondFloorOverController
 
-class TestFragment : Fragment() {
-
-    private var controller: OneFloorController?= null
+class OneFloorRecyclerViewFragment : Fragment() {
 
     companion object {
-        fun newInstance(): TestFragment {
-            return TestFragment()
+        fun newInstance(): OneFloorRecyclerViewFragment {
+            return OneFloorRecyclerViewFragment()
         }
     }
 
@@ -30,18 +26,29 @@ class TestFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.test_fragment, container, false)
+        val view = inflater.inflate(R.layout.one_floor_recyclerview_fragment, container, false)
         initView(view)
         return view
     }
 
     private fun initView(view: View?) {
-        val tipView = view?.findViewById<TextView>(R.id.tv_pull_tip)
-        val rlv = view?.findViewById<RecyclerView>(R.id.rlv_one_floor)
         val viewpager: ViewPager? = view?.findViewById(R.id.viewpager)
-        controller = view?.findViewById(R.id.controller)
-        controller?.addRecyclerView(rlv)
-        controller?.addOnPullScrollListener(object :
+        val tipView = view?.findViewById<TextView>(R.id.tv_pull_tip)
+
+        val recyclerView: RecyclerView? = view?.findViewById(R.id.rlv_one_floor)
+        recyclerView?.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = OneFloorAdapter()
+        }
+        parentFragment()?.getController()?.addScrollListView(recyclerView)
+
+        val fragments: MutableList<Fragment> = mutableListOf()
+        fragments.add(VpFragment.newInstance(R.mipmap.aa))
+        fragments.add(VpFragment.newInstance(R.mipmap.bb))
+        fragments.add(VpFragment.newInstance(R.mipmap.cc))
+        viewpager?.adapter = ViewPagerAdapter(fragments,childFragmentManager)
+
+        parentFragment()?.getController()?.addOnPullScrollListener(object :
             SecondFloorOverController.OnPullScrollListener {
             override fun onPullScroll(scrollY: Float, scrollDistance: Float) {
                 println("-------alpha------>>${scrollY}")
@@ -57,7 +64,7 @@ class TestFragment : Fragment() {
         })
 
 //        parentFragment()?.getController()?.addHeaderHeight(tipView)
-        controller
+        parentFragment()?.getController()
             ?.addOnPullRefreshListener(object : SecondFloorOverController.OnPullRefreshListener {
                 override fun onPullStatus(status: Int) {
                     println("=====>>状态：--$status")
@@ -68,8 +75,8 @@ class TestFragment : Fragment() {
                         }
                         SecondFloorOverController.REFRESH_HEADER_RUNNING -> {
                             tipView?.text = "刷新中"
-                            controller?.postDelayed(Runnable {
-                                controller?.setRefreshComplete()
+                            parentFragment()?.getController()?.postDelayed(Runnable {
+                                parentFragment()?.getController()?.setRefreshComplete()
                             }, 1500)
                         }
                         SecondFloorOverController.REFRESH_HEADER_END -> {
@@ -89,52 +96,26 @@ class TestFragment : Fragment() {
                     when (status) {
                         SecondFloorOverController.PULL_ONE_FLOOR_RUNNING -> {
                             tipView?.visibility = View.INVISIBLE
+                            viewpager?.visibility = View.VISIBLE
                         }
                         SecondFloorOverController.PULL_SECOND_FLOOR -> {
                             tipView?.visibility = View.INVISIBLE
+                            viewpager?.visibility = View.INVISIBLE
                         }
                     }
                 }
             })
 
-        val fragments: MutableList<Fragment> = mutableListOf()
-        fragments.add(VpFragment.newInstance(R.mipmap.aa))
-        fragments.add(VpFragment.newInstance(R.mipmap.bb))
-        fragments.add(VpFragment.newInstance(R.mipmap.cc))
-        viewpager?.adapter = ViewPagerAdapter(fragments,childFragmentManager)
-
-        rlv?.layoutManager = LinearLayoutManager(context)
-        rlv?.adapter = OneFloorAdapter()
-
-        backPress(view)
+        parentFragment()?.getController()?.setOverlapDistance(0)
     }
 
     /**
-     * Fragment返回处理 主要处理在二楼按返回键直接返回到一楼
+     * 父Fragment
      */
-    private fun backPress(view: View?) {
-        view?.isFocusableInTouchMode = true
-        view?.requestFocus()
-        view?.setOnKeyListener { v, keyCode, event ->
-            if (controller?.getCurrentItemIndex() == SecondFloorOverController.TWO_FLOOR_INDEX) {
-                if (event?.action == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
-                    backOneFloor()
-                }
-            } else {
-                if (event?.action == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
-                    activity?.finish()
-                }
-            }
-            true
+    fun parentFragment(): SecondFloorFragment? {
+        if (this@OneFloorRecyclerViewFragment.parentFragment is SecondFloorFragment) {
+            return (this@OneFloorRecyclerViewFragment.parentFragment as SecondFloorFragment)
         }
-    }
-
-    /**
-     * 返回到一楼
-     */
-    fun backOneFloor(isScroll: Boolean = true) {
-        if (controller?.getCurrentItemIndex() == SecondFloorOverController.TWO_FLOOR_INDEX) {
-            controller?.setCurrentItem(SecondFloorOverController.ONE_FLOOR_INDEX, isScroll)
-        }
+        return null
     }
 }

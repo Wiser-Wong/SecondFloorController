@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -13,11 +14,11 @@ import androidx.viewpager.widget.ViewPager
 import com.wiser.secondfloor.ScreenTools
 import com.wiser.secondfloor.SecondFloorOverController
 
-class OneFloorFragment : Fragment() {
+class OneFloorScrollViewFragment : Fragment() {
 
     companion object {
-        fun newInstance(): OneFloorFragment {
-            return OneFloorFragment()
+        fun newInstance(): OneFloorScrollViewFragment {
+            return OneFloorScrollViewFragment()
         }
     }
 
@@ -26,7 +27,7 @@ class OneFloorFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.one_floor_fragment, container, false)
+        val view = inflater.inflate(R.layout.one_floor_scroll_view_fragment, container, false)
         initView(view)
         return view
     }
@@ -34,13 +35,14 @@ class OneFloorFragment : Fragment() {
     private fun initView(view: View?) {
         val viewpager: ViewPager? = view?.findViewById(R.id.viewpager)
         val tipView = view?.findViewById<TextView>(R.id.tv_pull_tip)
+        val scrollview = view?.findViewById<NestedScrollView>(R.id.scrollview)
 
         val recyclerView: RecyclerView? = view?.findViewById(R.id.rlv_one_floor)
         recyclerView?.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = OneFloorAdapter()
-            parentFragment()?.getController()?.addRecyclerView(this)
         }
+        parentFragment()?.getController()?.addScrollListView(scrollview)
 
         val fragments: MutableList<Fragment> = mutableListOf()
         fragments.add(VpFragment.newInstance(R.mipmap.aa))
@@ -112,9 +114,9 @@ class OneFloorFragment : Fragment() {
     /**
      * 父Fragment
      */
-    fun parentFragment(): MainFragment? {
-        if (this@OneFloorFragment.parentFragment is MainFragment) {
-            return (this@OneFloorFragment.parentFragment as MainFragment)
+    fun parentFragment(): SecondFloorFragment? {
+        if (this@OneFloorScrollViewFragment.parentFragment is SecondFloorFragment) {
+            return (this@OneFloorScrollViewFragment.parentFragment as SecondFloorFragment)
         }
         return null
     }

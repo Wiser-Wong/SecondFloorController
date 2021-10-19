@@ -1,6 +1,7 @@
 package com.wiser.secondfloorcontroller
 
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
@@ -10,9 +11,16 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
 //        ViewPropertyAnimator.animate(findViewById(R.id.btn)).y(100f).setDuration(2000).start()
+    }
 
-        supportFragmentManager.beginTransaction().replace(R.id.fl_main_controller, MainFragment.newInstance(), MainFragment::javaClass.name).commitAllowingStateLoss()
-//        supportFragmentManager.beginTransaction().replace(R.id.fl_main_controller, TestFragment.newInstance(), TestFragment::javaClass.name).commitAllowingStateLoss()
+    fun skipSecondFloorRecyclerView(view: View) {
+        SecondFloorActivity.intent(this, SkipType.RECYCLERVIEW)
+    }
+    fun skipSecondFloorScrollView(view: View) {
+        SecondFloorActivity.intent(this, SkipType.SCROLLVIEW)
+    }
+    fun skipSecondFloorWebView(view: View) {
+        SecondFloorActivity.intent(this, SkipType.WEBVIEW)
     }
 
 }

@@ -8,18 +8,20 @@ import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import com.wiser.secondfloor.ScreenTools
 import com.wiser.secondfloor.SecondFloorOverController
-import com.wiser.secondfloor.nineoldandroids.animation.ValueAnimator
-import com.wiser.secondfloor.nineoldandroids.view.ViewHelper
 
-class MainFragment : Fragment() {
+class SecondFloorFragment : Fragment() {
 
     private var overController: SecondFloorOverController? = null
 
     companion object {
-        fun newInstance(): MainFragment {
-            return MainFragment()
+        const val SKIP_TYPE = "skipType"
+        fun newInstance(skipType: SkipType): SecondFloorFragment {
+            val fragment = SecondFloorFragment()
+            val bundle = Bundle()
+            bundle.putString(SKIP_TYPE, skipType.type)
+            fragment.arguments = bundle
+            return fragment
         }
     }
 
@@ -39,12 +41,34 @@ class MainFragment : Fragment() {
             .inflate(R.layout.main_one_floor_layout, overController, false)
         val twoView = LayoutInflater.from(activity)
             .inflate(R.layout.main_two_floor_layout, overController, false)
-        childFragmentManager.beginTransaction()
-            .replace(
-                R.id.fl_controller_one_floor,
-                OneFloorFragment.newInstance(),
-                OneFloorFragment::javaClass.name
-            ).commitAllowingStateLoss()
+        when (arguments?.getString(SKIP_TYPE)) {
+            SkipType.RECYCLERVIEW.type -> {
+                childFragmentManager.beginTransaction()
+                    .replace(
+                        R.id.fl_controller_one_floor,
+                        OneFloorRecyclerViewFragment.newInstance(),
+                        OneFloorRecyclerViewFragment::javaClass.name
+                    ).commitAllowingStateLoss()
+            }
+            SkipType.SCROLLVIEW.type -> {
+                childFragmentManager.beginTransaction()
+                    .replace(
+                        R.id.fl_controller_one_floor,
+                        OneFloorScrollViewFragment.newInstance(),
+                        OneFloorScrollViewFragment::javaClass.name
+                    ).commitAllowingStateLoss()
+            }
+            SkipType.WEBVIEW.type -> {
+                childFragmentManager.beginTransaction()
+                    .replace(
+                        R.id.fl_controller_one_floor,
+                        OneFloorWebViewFragment.newInstance(),
+                        OneFloorWebViewFragment::javaClass.name
+                    ).commitAllowingStateLoss()
+            }
+            else -> {
+            }
+        }
         childFragmentManager.beginTransaction()
             .replace(
                 R.id.fl_controller_two_floor,
@@ -53,15 +77,6 @@ class MainFragment : Fragment() {
             ).commitAllowingStateLoss()
         overController?.addOneFloorView(oneView)
         overController?.addTwoFloorView(twoView)
-
-        val animator =
-            ValueAnimator.ofFloat((-(ScreenTools.getScreenHeight(activity!!) - 500)).toFloat(), 0f)
-        animator.duration = 20000
-        animator.addUpdateListener {
-            val value = it.animatedValue
-            ViewHelper.setTranslationY(overController, value as Float)
-        }
-//        animator.start()
 
         val headerView =
             LayoutInflater.from(activity).inflate(R.layout.pull_header, overController, false)
@@ -72,6 +87,7 @@ class MainFragment : Fragment() {
             override fun onPullStatus(status: Int) {
                 when (status) {
                     SecondFloorOverController.REFRESH_HEADER_PREPARE -> {
+                        overController?.setHeaderVisible(true)
                         tipView?.text = "下拉刷新"
                     }
                     SecondFloorOverController.REFRESH_HEADER_RUNNING -> {
@@ -81,6 +97,7 @@ class MainFragment : Fragment() {
                         }, 1500)
                     }
                     SecondFloorOverController.REFRESH_HEADER_END -> {
+                        overController?.setHeaderVisible(false)
                         Toast.makeText(activity, "刷新数据了", Toast.LENGTH_SHORT).show()
                     }
                     SecondFloorOverController.REFRESH_HEADER_TWO_FLOOR_PREPARE -> {
@@ -123,8 +140,8 @@ class MainFragment : Fragment() {
             } else {
                 if (overController?.getCurrentItemIndex() == SecondFloorOverController.ONE_FLOOR_INDEX) {
                     if (event?.action == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
-                        overController?.setGuideAnim()
-//                        activity?.finish()
+//                        overController?.setGuideAnim()
+                        activity?.finish()
                     }
                 }
             }
