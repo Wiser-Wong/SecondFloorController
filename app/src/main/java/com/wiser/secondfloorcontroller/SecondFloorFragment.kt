@@ -66,6 +66,14 @@ class SecondFloorFragment : Fragment() {
                         OneFloorWebViewFragment::javaClass.name
                     ).commitAllowingStateLoss()
             }
+            SkipType.NOLIST.type -> {
+                childFragmentManager.beginTransaction()
+                    .replace(
+                        R.id.fl_controller_one_floor,
+                        OneFloorSimpleFragment.newInstance(),
+                        OneFloorSimpleFragment::javaClass.name
+                    ).commitAllowingStateLoss()
+            }
             else -> {
             }
         }
@@ -98,7 +106,9 @@ class SecondFloorFragment : Fragment() {
                     }
                     SecondFloorOverController.REFRESH_HEADER_END -> {
                         overController?.setHeaderVisible(false)
-                        Toast.makeText(activity, "刷新数据了", Toast.LENGTH_SHORT).show()
+                        activity?.apply {
+                            Toast.makeText(this, "刷新数据了", Toast.LENGTH_SHORT).show()
+                        }
                     }
                     SecondFloorOverController.REFRESH_HEADER_TWO_FLOOR_PREPARE -> {
                         tipView?.text = "继续下拉有惊喜哦"

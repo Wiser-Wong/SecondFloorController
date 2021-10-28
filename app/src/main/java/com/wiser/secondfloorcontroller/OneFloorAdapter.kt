@@ -21,7 +21,9 @@ class OneFloorAdapter : RecyclerView.Adapter<OneFloorAdapter.OneFloorHolder>() {
 
     override fun onBindViewHolder(holder: OneFloorHolder, position: Int) {
         holder.itemView?.setOnClickListener {
-            Toast.makeText(holder.itemView.context,"位置：--->>$position",Toast.LENGTH_LONG).show()
+            holder.itemView.context?.apply {
+                Toast.makeText(this,"位置：--->>$position",Toast.LENGTH_LONG).show()
+            }
         }
     }
 

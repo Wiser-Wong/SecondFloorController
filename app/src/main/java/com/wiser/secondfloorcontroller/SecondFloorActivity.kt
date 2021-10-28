@@ -30,6 +30,9 @@ class SecondFloorActivity: AppCompatActivity()  {
             SkipType.WEBVIEW.type -> {
                 supportFragmentManager.beginTransaction().replace(R.id.fl_main_controller, SecondFloorFragment.newInstance(SkipType.WEBVIEW), SecondFloorFragment::javaClass.name).commitAllowingStateLoss()
             }
+            SkipType.NOLIST.type -> {
+                supportFragmentManager.beginTransaction().replace(R.id.fl_main_controller, SecondFloorFragment.newInstance(SkipType.NOLIST), SecondFloorFragment::javaClass.name).commitAllowingStateLoss()
+            }
         }
     }
 }

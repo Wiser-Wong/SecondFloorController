@@ -122,11 +122,6 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
     private var view: View? = null
 
     /**
-     * 是否RecyclerView滚动到顶部
-     */
-    private var isSlidingTop = true
-
-    /**
      * 是否拦截该控件
      */
     private var isIntercept = true
@@ -300,7 +295,10 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
 
         headerFrameLayout = FrameLayout(context)
         headerFrameLayout?.layoutParams =
-            LayoutParams(LayoutParams.MATCH_PARENT, pullRefreshMaxDistance)
+            LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                if (headerHeight == 0) pullRefreshMaxDistance else headerHeight
+            )
         headerFrameLayout?.visibility = View.GONE
 
         addView(twoFloorFrameLayout)
@@ -317,11 +315,12 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
             overlapDistance = 0
             oneMarginLayoutParams?.topMargin = 0
             twoMarginLayoutParams?.topMargin = 0
+            headerMarginLayoutParams?.topMargin = 0
         } else {
             oneMarginLayoutParams?.topMargin = screenHeight - overlapDistance
             twoMarginLayoutParams?.topMargin = 0
+            headerMarginLayoutParams?.topMargin = screenHeight - pullRefreshMaxDistance
         }
-        headerMarginLayoutParams?.topMargin = screenHeight - pullRefreshMaxDistance
 
         (oneFloorFrameLayout as? OneFloorController)?.initOneFloorController(
             headerFrameLayout,
@@ -360,10 +359,14 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
 
     override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
         closeGuideAnim()
-        if (refreshHeaderStatus == REFRESH_HEADER_RUNNING || pullFloorStatus == PULL_ONE_FLOOR_RUNNING) {
+        if (pullFloorStatus == PULL_ONE_FLOOR_RUNNING) {
             return false
         }
-        return if (!isOver && getCurrentItemIndex() == ONE_FLOOR_INDEX && ScrollingUtil.isViewToTop(view,mTouchSlop) && !isAnimRunning) {
+        return if (!isOver && getCurrentItemIndex() == ONE_FLOOR_INDEX && ScrollingUtil.isViewToTop(
+                view,
+                mTouchSlop
+            ) && !isAnimRunning
+        ) {
             onFloorTouch(event, true)
         } else {
             super.dispatchTouchEvent(event)
@@ -371,11 +374,12 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
+        if (view != null) return super.onTouchEvent(event)
         closeGuideAnim()
-        if (refreshHeaderStatus == REFRESH_HEADER_RUNNING || pullFloorStatus == PULL_ONE_FLOOR_RUNNING) {
+        if (pullFloorStatus == PULL_ONE_FLOOR_RUNNING) {
             return false
         }
-        return if (!isOver && getCurrentItemIndex() == ONE_FLOOR_INDEX && ScrollingUtil.isViewToTop(view,mTouchSlop) && !isAnimRunning) {
+        return if (!isOver && getCurrentItemIndex() == ONE_FLOOR_INDEX && !isAnimRunning) {
             onFloorTouch(event, false)
         } else {
             super.onTouchEvent(event)
@@ -386,7 +390,7 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
      * 一楼事件处理
      */
     private fun onFloorTouch(event: MotionEvent?, isDispatchTouch: Boolean): Boolean {
-        if (isInterceptOneFloorTouch || refreshHeaderStatus == REFRESH_HEADER_RUNNING) return if (view == null || !isDispatchTouch) true else super.dispatchTouchEvent(
+        if (isInterceptOneFloorTouch || pullFloorStatus == PULL_ONE_FLOOR_RUNNING) return if (view == null || !isDispatchTouch) true else super.dispatchTouchEvent(
             event
         )
         val actionIndex = event?.actionIndex ?: 0
@@ -402,7 +406,6 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
                 mScrollPointerId = event.getPointerId(actionIndex)
                 touchX = event.getRawX(event.findPointerIndex(mScrollPointerId))
                 touchY = event.getRawY(event.findPointerIndex(mScrollPointerId))
-                refreshHeaderStatus = REFRESH_HEADER_NO
                 lastDownY = event.getRawY(event.findPointerIndex(mScrollPointerId))
             }
             return if (view == null || !isDispatchTouch) true else super.dispatchTouchEvent(
@@ -414,14 +417,10 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
                 mScrollPointerId = event.getPointerId(0)
                 touchX = event.rawX
                 touchY = event.rawY
-                if (refreshHeaderStatus == REFRESH_HEADER_NO || refreshHeaderStatus == REFRESH_HEADER_END) {
+                if (refreshHeaderStatus == REFRESH_HEADER_END) {
                     refreshHeaderStatus = REFRESH_HEADER_NO
-                    lastDownY = event.rawY
-                } else {
-                    return if (view == null || !isDispatchTouch) true else super.dispatchTouchEvent(
-                        event
-                    )
                 }
+                lastDownY = event.rawY
             }
             MotionEvent.ACTION_POINTER_DOWN -> {
                 mScrollPointerId = event.getPointerId(actionIndex)
@@ -485,7 +484,6 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
                 }
             }
             MotionEvent.ACTION_UP -> {
-                lastMoveDistanceY = 0f
                 // 如果松开的时候处于进入二楼准备阶段，则进行刷新操作
                 if (refreshHeaderStatus == REFRESH_HEADER_TWO_FLOOR_PREPARE) {
                     setRefreshing()
@@ -529,7 +527,10 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
             }
             MotionEvent.ACTION_MOVE -> {
                 isIntercept =
-                    ViewHelper.getTranslationY(this) + screenHeight - overlapDistance > 0f && ScrollingUtil.isViewToTop(view,mTouchSlop) && isTouchEvent(
+                    ViewHelper.getTranslationY(this) + screenHeight - overlapDistance > 0f && ScrollingUtil.isViewToTop(
+                        view,
+                        mTouchSlop
+                    ) && isTouchEvent(
                         event
                     )
             }
@@ -673,10 +674,13 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
             measureView(this)
             headerHeight = measuredHeight
             val params = LayoutParams(LayoutParams.MATCH_PARENT, headerHeight)
-            params.gravity = Gravity.BOTTOM
             if (isOver) {
-                (oneFloorFrameLayout as? OneFloorController)?.addHeaderView(this, params)
+                (oneFloorFrameLayout as? OneFloorController)?.addHeaderView(this, params, headerHeight)
             } else {
+                val headerMarginLayoutParams: MarginLayoutParams? =
+                    headerFrameLayout?.layoutParams as MarginLayoutParams?
+                headerMarginLayoutParams?.height = headerHeight
+                headerMarginLayoutParams?.topMargin = screenHeight - headerHeight
                 headerFrameLayout?.addView(this, params)
             }
         }
@@ -689,6 +693,11 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
         this.headerHeight = headerHeight
         if (isOver) {
             (oneFloorFrameLayout as? OneFloorController)?.addHeaderHeight(headerHeight)
+        } else {
+            val headerMarginLayoutParams: MarginLayoutParams? =
+                headerFrameLayout?.layoutParams as MarginLayoutParams?
+            headerMarginLayoutParams?.height = headerHeight
+            headerMarginLayoutParams?.topMargin = screenHeight - headerHeight
         }
     }
 
@@ -701,6 +710,11 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
             headerHeight = measuredHeight
             if (isOver) {
                 (oneFloorFrameLayout as? OneFloorController)?.addHeaderHeight(headerHeight)
+            } else {
+                val headerMarginLayoutParams: MarginLayoutParams? =
+                    headerFrameLayout?.layoutParams as MarginLayoutParams?
+                headerMarginLayoutParams?.height = headerHeight
+                headerMarginLayoutParams?.topMargin = screenHeight - headerHeight
             }
         }
     }

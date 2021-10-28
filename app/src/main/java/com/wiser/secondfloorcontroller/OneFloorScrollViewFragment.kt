@@ -83,7 +83,9 @@ class OneFloorScrollViewFragment : Fragment() {
                         }
                         SecondFloorOverController.REFRESH_HEADER_END -> {
                             tipView?.visibility = View.INVISIBLE
-                            Toast.makeText(activity, "刷新数据了", Toast.LENGTH_SHORT).show()
+                            activity?.apply {
+                                Toast.makeText(this, "刷新数据了", Toast.LENGTH_SHORT).show()
+                            }
                         }
                         SecondFloorOverController.REFRESH_HEADER_TWO_FLOOR_PREPARE -> {
                             tipView?.text = "继续下拉有惊喜哦"
@@ -108,7 +110,7 @@ class OneFloorScrollViewFragment : Fragment() {
                 }
             })
 
-        parentFragment()?.getController()?.setOverlapDistance(0)
+//        parentFragment()?.getController()?.setOverlapDistance(0)
     }
 
     /**

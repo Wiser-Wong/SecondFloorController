@@ -4,9 +4,7 @@ import android.content.Context
 import android.content.res.TypedArray
 import android.os.Handler
 import android.util.AttributeSet
-import android.view.MotionEvent
-import android.view.View
-import android.view.ViewConfiguration
+import android.view.*
 import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
 import com.wiser.secondfloor.nineoldandroids.animation.Animator
@@ -66,11 +64,6 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
     private var pullFloorStatus = SecondFloorOverController.PULL_ONE_FLOOR
 
     /**
-     * 是否RecyclerView滚动到顶部
-     */
-    private var isSlidingTop = true
-
-    /**
      * 是否拦截该控件
      */
     private var isIntercept = true
@@ -86,6 +79,8 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
      * 是否刷新回弹
      */
     private var isRefreshingBackAnim = true
+
+    private var isHeaderTop = true
 
     /**
      * 初始化位置
@@ -172,6 +167,14 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
         ta.recycle()
 
         initTranslationY = -screenHeight.toFloat()
+
+        headerFrameLayout = FrameLayout(context)
+        headerFrameLayout?.layoutParams =
+            LayoutParams(
+                LayoutParams.MATCH_PARENT, headerHeight)
+        headerFrameLayout?.visibility = View.GONE
+
+        addView(headerFrameLayout)
     }
 
     fun initOneFloorController(
@@ -207,25 +210,9 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
         }
     }
 
-    /**
-     * 添加滑动控件
-     */
-    fun addScrollListView(view: View?) {
-        this.view = view
-    }
-
-    /**
-     * 添加Header
-     */
-    fun addHeaderView(view: View?, params: LayoutParams?) {
-        view?.apply {
-            headerFrameLayout?.addView(this, params)
-        }
-    }
-
     override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
         closeGuideAnim()
-        if (refreshHeaderStatus == SecondFloorOverController.REFRESH_HEADER_RUNNING || pullFloorStatus == SecondFloorOverController.PULL_ONE_FLOOR_RUNNING) {
+        if (pullFloorStatus == SecondFloorOverController.PULL_ONE_FLOOR_RUNNING) {
             return false
         }
         return if (getCurrentItemIndex() == SecondFloorOverController.ONE_FLOOR_INDEX && ScrollingUtil.isViewToTop(
@@ -240,14 +227,12 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
+        if (view != null) return super.onTouchEvent(event)
         closeGuideAnim()
-        if (refreshHeaderStatus == SecondFloorOverController.REFRESH_HEADER_RUNNING || pullFloorStatus == SecondFloorOverController.PULL_ONE_FLOOR_RUNNING) {
+        if (pullFloorStatus == SecondFloorOverController.PULL_ONE_FLOOR_RUNNING) {
             return false
         }
-        return if (getCurrentItemIndex() == SecondFloorOverController.ONE_FLOOR_INDEX && ScrollingUtil.isViewToTop(
-                view,
-                mTouchSlop
-            ) && !isAnimRunning
+        return if (getCurrentItemIndex() == SecondFloorOverController.ONE_FLOOR_INDEX && !isAnimRunning
         ) {
             onFloorTouch(event, false)
         } else {
@@ -259,24 +244,23 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
      * 一楼事件处理
      */
     private fun onFloorTouch(event: MotionEvent?, isDispatchTouch: Boolean): Boolean {
-        if (isInterceptOneFloorTouch || refreshHeaderStatus == SecondFloorOverController.REFRESH_HEADER_RUNNING) return if (view == null || !isDispatchTouch) true else super.dispatchTouchEvent(
+        if (isInterceptOneFloorTouch || pullFloorStatus == SecondFloorOverController.PULL_ONE_FLOOR_RUNNING) return if (view == null || !isDispatchTouch) true else super.dispatchTouchEvent(
             event
         )
         val actionIndex = event?.actionIndex ?: 0
         if (!isTouchEvent(event) && ViewHelper.getTranslationY(this) == 0f) {
             if (event?.actionMasked == MotionEvent.ACTION_DOWN) {
                 mScrollPointerId = event.getPointerId(0)
-                touchX = event.rawX
-                touchY = event.rawY
+                touchX = event.x
+                touchY = event.y
                 refreshHeaderStatus = SecondFloorOverController.REFRESH_HEADER_NO
-                lastDownY = event.rawY
+                lastDownY = event.y
             }
             if (event?.actionMasked == MotionEvent.ACTION_POINTER_DOWN) {
                 mScrollPointerId = event.getPointerId(actionIndex)
-                touchX = event.getRawX(event.findPointerIndex(mScrollPointerId))
-                touchY = event.getRawY(event.findPointerIndex(mScrollPointerId))
-                refreshHeaderStatus = SecondFloorOverController.REFRESH_HEADER_NO
-                lastDownY = event.getRawY(event.findPointerIndex(mScrollPointerId))
+                touchX = event.getX(event.findPointerIndex(mScrollPointerId))
+                touchY = event.getY(event.findPointerIndex(mScrollPointerId))
+                lastDownY = event.getY(event.findPointerIndex(mScrollPointerId))
             }
             return if (view == null || !isDispatchTouch) true else super.dispatchTouchEvent(
                 event
@@ -285,28 +269,24 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
         when (event?.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 mScrollPointerId = event.getPointerId(0)
-                touchX = event.rawX
-                touchY = event.rawY
-                if (refreshHeaderStatus == SecondFloorOverController.REFRESH_HEADER_NO || refreshHeaderStatus == SecondFloorOverController.REFRESH_HEADER_END) {
+                touchX = event.x
+                touchY = event.y
+                if (refreshHeaderStatus == SecondFloorOverController.REFRESH_HEADER_END) {
                     refreshHeaderStatus = SecondFloorOverController.REFRESH_HEADER_NO
-                    lastDownY = event.rawY
-                } else {
-                    return if (view == null || !isDispatchTouch) true else super.dispatchTouchEvent(
-                        event
-                    )
                 }
+                lastDownY = event.y
             }
             MotionEvent.ACTION_POINTER_DOWN -> {
                 mScrollPointerId = event.getPointerId(actionIndex)
-                touchX = event.getRawX(event.findPointerIndex(mScrollPointerId))
-                touchY = event.getRawY(event.findPointerIndex(mScrollPointerId))
-                lastDownY = event.getRawY(event.findPointerIndex(mScrollPointerId))
+                touchX = event.getX(event.findPointerIndex(mScrollPointerId))
+                touchY = event.getY(event.findPointerIndex(mScrollPointerId))
+                lastDownY = event.getY(event.findPointerIndex(mScrollPointerId))
             }
             MotionEvent.ACTION_MOVE -> {
                 val index = event.findPointerIndex(mScrollPointerId)
                 if (index < 0) return false
                 view?.parent?.requestDisallowInterceptTouchEvent(false)
-                val moveY = (event.getRawY(index) - lastDownY) / frictionValue
+                val moveY = (event.getY(index) - lastDownY) / frictionValue
                 // 底部临界
                 if (ViewHelper.getTranslationY(this) + moveY <= 0) {
                     ViewHelper.setTranslationY(this, 0f)
@@ -314,9 +294,9 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
                     // 滑动显示头部布局
                     setHeaderVisible(true)
                     val moveDistanceY =
-                        lastMoveDistanceY + (event.getRawY(index) - lastDownY) / frictionValue
+                        lastMoveDistanceY + (event.getY(index) - lastDownY) / frictionValue
                     lastMoveDistanceY = moveDistanceY
-                    lastDownY = event.getRawY(index)
+                    lastDownY = event.getY(index)
                     // 滑动监听
                     onPullScrollListener?.onPullScroll(
                         moveDistanceY,
@@ -351,7 +331,6 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
                 }
             }
             MotionEvent.ACTION_UP -> {
-                lastMoveDistanceY = 0f
                 // 如果松开的时候处于进入二楼准备阶段，则进行刷新操作
                 if (refreshHeaderStatus == SecondFloorOverController.REFRESH_HEADER_TWO_FLOOR_PREPARE) {
                     setRefreshing()
@@ -389,8 +368,8 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
         when (event?.actionMasked) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
                 mScrollPointerId = event.getPointerId(actionIndex)
-                touchX = event.getRawX(event.findPointerIndex(mScrollPointerId))
-                touchY = event.getRawY(event.findPointerIndex(mScrollPointerId))
+                touchX = event.getX(event.findPointerIndex(mScrollPointerId))
+                touchY = event.getY(event.findPointerIndex(mScrollPointerId))
                 isIntercept = false
             }
             MotionEvent.ACTION_MOVE -> {
@@ -410,8 +389,8 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
         if (index < 0) {
             return false
         }
-        val x = event?.getRawX(index) ?: 0f
-        val y = event?.getRawY(index) ?: 0f
+        val x = event?.getX(index) ?: 0f
+        val y = event?.getY(index) ?: 0f
         val dx = x - touchX
         val dy = y - touchY
         return abs(dy) > mTouchSlop && abs(dy) >= abs(dx)
@@ -654,6 +633,29 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
     }
 
     /**
+     * 测量子控件
+     */
+    private fun measureView(child: View?) {
+        var p = child?.layoutParams
+        if (p == null) {
+            p = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        }
+        val childWidthSpec = getChildMeasureSpec(0, 0, p.width)
+        val lpHeight = p.height
+        val childHeightSpec: Int
+        childHeightSpec = if (lpHeight > 0) {
+            MeasureSpec.makeMeasureSpec(lpHeight, MeasureSpec.EXACTLY)
+        } else {
+            MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+        }
+        child?.measure(childWidthSpec, childHeightSpec)
+    }
+
+
+    /**
      * 获取当前坐标位置
      */
     fun getCurrentItemIndex(): Int = currentItemIndex
@@ -671,10 +673,65 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
     fun isGuideStatus(): Boolean = isGuideStatus
 
     /**
+     * 添加滑动控件
+     */
+    fun addScrollListView(view: View?) {
+        this.view = view
+    }
+
+    /**
+     * 添加Header
+     */
+    fun addHeaderView(view: View?) {
+        view?.apply {
+            measureView(this)
+            headerHeight = measuredHeight
+            val params = LayoutParams(LayoutParams.MATCH_PARENT, headerHeight)
+            val headerMarginLayoutParams: MarginLayoutParams? =
+                headerFrameLayout?.layoutParams as MarginLayoutParams?
+            headerMarginLayoutParams?.height = headerHeight
+            headerMarginLayoutParams?.topMargin = 0
+            headerFrameLayout?.addView(this, params)
+        }
+    }
+
+    /**
+     * 添加Header
+     */
+    fun addHeaderView(view: View?, params: LayoutParams?, headerHeight: Int) {
+        this.headerHeight = headerHeight
+        view?.apply {
+            val headerMarginLayoutParams: MarginLayoutParams? =
+                headerFrameLayout?.layoutParams as MarginLayoutParams?
+            headerMarginLayoutParams?.height = headerHeight
+            headerMarginLayoutParams?.topMargin = 0
+            headerFrameLayout?.addView(this, params)
+        }
+    }
+
+    /**
      * 如果要使用外部header需要将header高度传入
      */
     fun addHeaderHeight(headerHeight: Int) {
         this.headerHeight = headerHeight
+        val headerMarginLayoutParams: MarginLayoutParams? =
+            headerFrameLayout?.layoutParams as MarginLayoutParams?
+        headerMarginLayoutParams?.height = headerHeight
+        headerMarginLayoutParams?.topMargin = 0
+    }
+
+    /**
+     * 如果要使用外部header需要将header高度传入
+     */
+    fun addHeaderHeight(view: View?) {
+        view?.apply {
+            measureView(this)
+            headerHeight = measuredHeight
+            val headerMarginLayoutParams: MarginLayoutParams? =
+                headerFrameLayout?.layoutParams as MarginLayoutParams?
+            headerMarginLayoutParams?.height = headerHeight
+            headerMarginLayoutParams?.topMargin = 0
+        }
     }
 
     /**

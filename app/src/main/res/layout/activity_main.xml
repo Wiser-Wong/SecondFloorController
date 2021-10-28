@@ -24,4 +24,10 @@
         android:text="二楼支持WebView"
         android:onClick="skipSecondFloorWebView"/>
 
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="二楼支持非列表"
+        android:onClick="skipSecondFloorNoList"/>
+
 </LinearLayout>

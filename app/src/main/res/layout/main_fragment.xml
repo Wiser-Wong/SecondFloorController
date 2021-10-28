@@ -10,9 +10,8 @@
     sfc:sfc_is_over="false"
     sfc:sfc_is_refreshing_back_anim="true"
     sfc:sfc_overlap_distance="0dp"
-    sfc:sfc_header_height="50dp"
-    sfc:sfc_pull_into_two_floor_distance="250dp"
-    sfc:sfc_pull_refresh_distance="130dp"
+    sfc:sfc_pull_into_two_floor_distance="160dp"
+    sfc:sfc_pull_refresh_distance="100dp"
     sfc:sfc_show_item="sfc_one_floor"
     tools:context=".MainActivity">
 
