@@ -19,7 +19,9 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".SecondFloorActivity"
+        <activity android:name=".OneFloorHasSecondFloorActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".OneFloorNoSecondFloorActivity"
             android:screenOrientation="portrait"/>
     </application>
 

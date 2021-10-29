@@ -7,11 +7,11 @@ import android.view.ViewGroup
 import android.webkit.WebView
 import androidx.fragment.app.Fragment
 
-class OneFloorWebViewFragment : Fragment() {
+class OneFloorHasSecondFloorWebViewFragment : Fragment() {
 
     companion object {
-        fun newInstance(): OneFloorWebViewFragment {
-            return OneFloorWebViewFragment()
+        fun newInstance(): OneFloorHasSecondFloorWebViewFragment {
+            return OneFloorHasSecondFloorWebViewFragment()
         }
     }
 
@@ -40,9 +40,9 @@ class OneFloorWebViewFragment : Fragment() {
     /**
      * 父Fragment
      */
-    fun parentFragment(): SecondFloorFragment? {
-        if (this@OneFloorWebViewFragment.parentFragment is SecondFloorFragment) {
-            return (this@OneFloorWebViewFragment.parentFragment as SecondFloorFragment)
+    fun parentFragment(): OneFloorHasSecondFloorFragment? {
+        if (this@OneFloorHasSecondFloorWebViewFragment.parentFragment is OneFloorHasSecondFloorFragment) {
+            return (this@OneFloorHasSecondFloorWebViewFragment.parentFragment as OneFloorHasSecondFloorFragment)
         }
         return null
     }

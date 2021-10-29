@@ -13,5 +13,6 @@
         <attr name="sfc_is_intercept_one_floor_touch" format="boolean"/>
         <attr name="sfc_is_refreshing_back_anim" format="boolean"/>
         <attr name="sfc_is_over" format="boolean"/>
+        <attr name="sfc_is_no_second_floor" format="boolean"/>
     </declare-styleable>
 </resources>

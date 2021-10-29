@@ -35,9 +35,9 @@ class TwoFloorFragment: Fragment() {
     /**
      * 父Fragment
      */
-    fun parentFragment(): SecondFloorFragment? {
-        if (this@TwoFloorFragment.parentFragment is SecondFloorFragment) {
-            return (this@TwoFloorFragment.parentFragment as SecondFloorFragment)
+    fun parentFragment(): OneFloorHasSecondFloorFragment? {
+        if (this@TwoFloorFragment.parentFragment is OneFloorHasSecondFloorFragment) {
+            return (this@TwoFloorFragment.parentFragment as OneFloorHasSecondFloorFragment)
         }
         return null
     }

@@ -19,7 +19,8 @@ import kotlin.math.abs
  *
  * 一楼触摸事件
  */
-class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(context, attrs) {
+class OneFloorContentController(context: Context, attrs: AttributeSet) :
+    FrameLayout(context, attrs) {
 
     /**
      * 屏幕高度
@@ -35,11 +36,6 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
      * Header控件
      */
     private var headerFrameLayout: FrameLayout? = null
-
-    /**
-     * 内容控件
-     */
-    private var contentFrameLayout: FrameLayout? = null
 
     /**
      * 上次滑动的距离
@@ -88,7 +84,7 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
     /**
      * 是否禁止二楼
      */
-    private var isNoSecondFloor = true
+    private var isNoSecondFloor = false
 
     /**
      * 初始化位置
@@ -180,21 +176,18 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
 
         initTranslationY = -screenHeight.toFloat()
 
-        contentFrameLayout = FrameLayout(context)
-        contentFrameLayout?.layoutParams =
-            LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
-
         headerFrameLayout = FrameLayout(context)
         headerFrameLayout?.layoutParams =
             LayoutParams(
                 LayoutParams.MATCH_PARENT, headerHeight
             )
+        headerFrameLayout?.visibility = View.GONE
 
         addView(headerFrameLayout)
-        addView(contentFrameLayout)
     }
 
     fun initOneFloorController(
+        headerFrameLayout: FrameLayout?,
         screenHeight: Int,
         currentItemIndex: Int,
         frictionValue: Float,
@@ -203,9 +196,9 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
         initTranslationY: Float,
         pullRefreshMaxDistance: Int,
         continuePullIntoTwoFloorDistance: Int,
-        headerHeight: Int,
-        isNoSecondFloor: Boolean
+        headerHeight: Int
     ) {
+        this.headerFrameLayout = headerFrameLayout
         this.screenHeight = screenHeight
         this.currentItemIndex = currentItemIndex
         this.frictionValue = frictionValue
@@ -215,7 +208,6 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
         this.pullRefreshMaxDistance = pullRefreshMaxDistance
         this.continuePullIntoTwoFloorDistance = continuePullIntoTwoFloorDistance
         this.headerHeight = headerHeight
-        this.isNoSecondFloor = isNoSecondFloor
 
         when (currentItemIndex) {
             SecondFloorOverController.ONE_FLOOR_INDEX -> {
@@ -307,11 +299,6 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
                 // 底部临界
                 if (ViewHelper.getTranslationY(this) + moveY <= 0) {
                     ViewHelper.setTranslationY(this, 0f)
-                    // 滑动监听
-                    onPullScrollListener?.onPullScroll(
-                        0f,
-                        0f
-                    )
                 } else {
                     // 滑动显示头部布局
                     setHeaderVisible(true)
@@ -424,20 +411,6 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
         val dx = x - touchX
         val dy = y - touchY
         return abs(dy) > mTouchSlop && abs(dy) >= abs(dx)
-    }
-
-    /**
-     * 判断是否禁止二楼
-     */
-    private fun judgeNoSecondFloor(): Boolean {
-        // 是否禁止二楼
-        if (isNoSecondFloor) {
-            println("===========>>: $lastMoveDistanceY ======>>: $pullRefreshMaxDistance")
-            if (lastMoveDistanceY >= pullRefreshMaxDistance) {
-                return true
-            }
-        }
-        return false
     }
 
     /**
@@ -621,6 +594,7 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
                     }
                 })
                 animator.start()
+                setHeaderVisible(false)
             }
             SecondFloorOverController.TWO_FLOOR_INDEX -> { // 2楼
                 pullFloorStatus = SecondFloorOverController.PULL_SECOND_FLOOR_RUNNING
@@ -668,17 +642,8 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
      * 刷新完成
      */
     fun setRefreshComplete() {
-        setRefreshComplete(false)
-    }
-
-    /**
-     * 刷新完成
-     */
-    fun setRefreshComplete(isGoneHeader: Boolean = false) {
         refreshHeaderStatus = SecondFloorOverController.REFRESH_HEADER_END
-        if (isGoneHeader) {
-            setHeaderVisible(false)
-        }
+        headerFrameLayout?.visibility = View.GONE
         setCurrentItem(SecondFloorOverController.ONE_FLOOR_INDEX)
         view?.parent?.requestDisallowInterceptTouchEvent(true)
         onPullRefreshListener?.onPullStatus(SecondFloorOverController.REFRESH_HEADER_END)
@@ -706,21 +671,6 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
         child?.measure(childWidthSpec, childHeightSpec)
     }
 
-    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        super.onLayout(changed, left, top, right, bottom)
-        headerFrameLayout?.layout(
-            0,
-            0,
-            contentFrameLayout?.measuredWidth ?: 0,
-            headerHeight
-        )
-        contentFrameLayout?.layout(
-            0,
-            headerHeight,
-            contentFrameLayout?.measuredWidth ?: 0,
-            bottom + headerHeight
-        )
-    }
 
     /**
      * 获取当前坐标位置
@@ -747,15 +697,6 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
     }
 
     /**
-     * 添加内容视图
-     */
-    fun addContentView(view: View?) {
-        view?.apply {
-            contentFrameLayout?.addView(this)
-        }
-    }
-
-    /**
      * 添加Header
      */
     fun addHeaderView(view: View?) {
@@ -766,6 +707,7 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
             val headerMarginLayoutParams: MarginLayoutParams? =
                 headerFrameLayout?.layoutParams as MarginLayoutParams?
             headerMarginLayoutParams?.height = headerHeight
+            headerMarginLayoutParams?.topMargin = 0
             headerFrameLayout?.addView(this, params)
         }
     }
@@ -776,6 +718,10 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
     fun addHeaderView(view: View?, params: LayoutParams?, headerHeight: Int) {
         this.headerHeight = headerHeight
         view?.apply {
+            val headerMarginLayoutParams: MarginLayoutParams? =
+                headerFrameLayout?.layoutParams as MarginLayoutParams?
+            headerMarginLayoutParams?.height = headerHeight
+            headerMarginLayoutParams?.topMargin = 0
             headerFrameLayout?.addView(this, params)
         }
     }
@@ -788,6 +734,7 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
         val headerMarginLayoutParams: MarginLayoutParams? =
             headerFrameLayout?.layoutParams as MarginLayoutParams?
         headerMarginLayoutParams?.height = headerHeight
+        headerMarginLayoutParams?.topMargin = 0
     }
 
     /**
@@ -800,6 +747,7 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
             val headerMarginLayoutParams: MarginLayoutParams? =
                 headerFrameLayout?.layoutParams as MarginLayoutParams?
             headerMarginLayoutParams?.height = headerHeight
+            headerMarginLayoutParams?.topMargin = 0
         }
     }
 

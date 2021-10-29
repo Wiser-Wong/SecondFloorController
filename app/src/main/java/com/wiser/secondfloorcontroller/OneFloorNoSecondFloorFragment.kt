@@ -8,16 +8,17 @@ import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.wiser.secondfloor.OneFloorHeaderController
 import com.wiser.secondfloor.SecondFloorOverController
 
-class SecondFloorFragment : Fragment() {
+class OneFloorNoSecondFloorFragment : Fragment() {
 
-    private var overController: SecondFloorOverController? = null
+    private var headerController: OneFloorHeaderController? = null
 
     companion object {
         const val SKIP_TYPE = "skipType"
-        fun newInstance(skipType: SkipType): SecondFloorFragment {
-            val fragment = SecondFloorFragment()
+        fun newInstance(skipType: SkipType): OneFloorNoSecondFloorFragment {
+            val fragment = OneFloorNoSecondFloorFragment()
             val bundle = Bundle()
             bundle.putString(SKIP_TYPE, skipType.type)
             fragment.arguments = bundle
@@ -30,88 +31,78 @@ class SecondFloorFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.main_fragment, container, false)
+        val view = inflater.inflate(R.layout.main_fragment1, container, false)
         initView(view)
         return view
     }
 
     private fun initView(view: View?) {
-        overController = view?.findViewById(R.id.controller)
+        headerController = view?.findViewById(R.id.controller)
         val oneView = LayoutInflater.from(activity)
-            .inflate(R.layout.main_one_floor_layout, overController, false)
-        val twoView = LayoutInflater.from(activity)
-            .inflate(R.layout.main_two_floor_layout, overController, false)
+            .inflate(R.layout.main_one_floor_layout, headerController, false)
         when (arguments?.getString(SKIP_TYPE)) {
             SkipType.RECYCLERVIEW.type -> {
                 childFragmentManager.beginTransaction()
                     .replace(
                         R.id.fl_controller_one_floor,
-                        OneFloorRecyclerViewFragment.newInstance(),
-                        OneFloorRecyclerViewFragment::javaClass.name
+                        OneFloorNoSecondFloorRecyclerViewFragment.newInstance(),
+                        OneFloorNoSecondFloorRecyclerViewFragment::javaClass.name
                     ).commitAllowingStateLoss()
             }
             SkipType.SCROLLVIEW.type -> {
                 childFragmentManager.beginTransaction()
                     .replace(
                         R.id.fl_controller_one_floor,
-                        OneFloorScrollViewFragment.newInstance(),
-                        OneFloorScrollViewFragment::javaClass.name
+                        OneFloorNoSecondFloorScrollViewFragment.newInstance(),
+                        OneFloorNoSecondFloorScrollViewFragment::javaClass.name
                     ).commitAllowingStateLoss()
             }
             SkipType.WEBVIEW.type -> {
                 childFragmentManager.beginTransaction()
                     .replace(
                         R.id.fl_controller_one_floor,
-                        OneFloorWebViewFragment.newInstance(),
-                        OneFloorWebViewFragment::javaClass.name
+                        OneFloorNoSecondFloorWebViewFragment.newInstance(),
+                        OneFloorNoSecondFloorWebViewFragment::javaClass.name
                     ).commitAllowingStateLoss()
             }
             SkipType.NOLIST.type -> {
                 childFragmentManager.beginTransaction()
                     .replace(
                         R.id.fl_controller_one_floor,
-                        OneFloorSimpleFragment.newInstance(),
-                        OneFloorSimpleFragment::javaClass.name
+                        OneFloorNoSecondFloorSimpleFragment.newInstance(),
+                        OneFloorNoSecondFloorSimpleFragment::javaClass.name
                     ).commitAllowingStateLoss()
             }
             else -> {
             }
         }
-        childFragmentManager.beginTransaction()
-            .replace(
-                R.id.fl_controller_two_floor,
-                TwoFloorFragment.newInstance(),
-                TwoFloorFragment::javaClass.name
-            ).commitAllowingStateLoss()
-        overController?.addOneFloorView(oneView)
-        overController?.addTwoFloorView(twoView)
+
+        headerController?.addContentView(oneView)
 
         val headerView =
-            LayoutInflater.from(activity).inflate(R.layout.pull_header, overController, false)
+            LayoutInflater.from(activity).inflate(R.layout.pull_header, headerController, false)
         val tipView = headerView?.findViewById<TextView>(R.id.tv_pull_tip)
-        overController?.addHeaderView(headerView)
-        overController?.addOnPullRefreshListener(object :
+        headerController?.addHeaderView(headerView)
+        headerController?.addOnPullRefreshListener(object :
             SecondFloorOverController.OnPullRefreshListener {
             override fun onPullStatus(status: Int) {
                 when (status) {
                     SecondFloorOverController.REFRESH_HEADER_PREPARE -> {
-                        overController?.setHeaderVisible(true)
                         tipView?.text = "下拉刷新"
                     }
                     SecondFloorOverController.REFRESH_HEADER_RUNNING -> {
                         tipView?.text = "刷新中"
-                        overController?.postDelayed(Runnable {
-                            overController?.setRefreshComplete()
+                        headerController?.postDelayed(Runnable {
+                            headerController?.setRefreshComplete()
                         }, 1500)
                     }
                     SecondFloorOverController.REFRESH_HEADER_END -> {
-                        overController?.setHeaderVisible(false)
                         activity?.apply {
                             Toast.makeText(this, "刷新数据了", Toast.LENGTH_SHORT).show()
                         }
                     }
                     SecondFloorOverController.REFRESH_HEADER_TWO_FLOOR_PREPARE -> {
-                        tipView?.text = "继续下拉有惊喜哦"
+                        tipView?.text = "松开进行刷新"
                     }
                     SecondFloorOverController.REFRESH_HEADER_TWO_FLOOR_RUNNING -> {
                         tipView?.text = "松手得惊喜"
@@ -123,7 +114,7 @@ class SecondFloorFragment : Fragment() {
 
             }
         })
-        overController?.addOnPullScrollListener(object :
+        headerController?.addOnPullScrollListener(object :
             SecondFloorOverController.OnPullScrollListener {
 
             override fun onPullScroll(scrollY: Float, scrollDistance: Float) {
@@ -131,7 +122,7 @@ class SecondFloorFragment : Fragment() {
             }
         })
 
-        overController?.setGuideAnim()
+        headerController?.setGuideAnim()
 
         backPress(view)
     }
@@ -143,12 +134,12 @@ class SecondFloorFragment : Fragment() {
         view?.isFocusableInTouchMode = true
         view?.requestFocus()
         view?.setOnKeyListener { v, keyCode, event ->
-            if (overController?.getCurrentItemIndex() == SecondFloorOverController.TWO_FLOOR_INDEX) {
+            if (headerController?.getCurrentItemIndex() == SecondFloorOverController.TWO_FLOOR_INDEX) {
                 if (event?.action == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
                     backOneFloor()
                 }
             } else {
-                if (overController?.getCurrentItemIndex() == SecondFloorOverController.ONE_FLOOR_INDEX) {
+                if (headerController?.getCurrentItemIndex() == SecondFloorOverController.ONE_FLOOR_INDEX) {
                     if (event?.action == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
 //                        overController?.setGuideAnim()
                         activity?.finish()
@@ -159,13 +150,13 @@ class SecondFloorFragment : Fragment() {
         }
     }
 
-    fun getController(): SecondFloorOverController? = overController
+    fun getController(): OneFloorHeaderController? = headerController
 
     /**
      * 返回到一楼
      */
     fun backOneFloor(isScroll: Boolean = true) {
-        overController?.setCurrentItem(SecondFloorOverController.ONE_FLOOR_INDEX, isScroll)
+        headerController?.setCurrentItem(SecondFloorOverController.ONE_FLOOR_INDEX, isScroll)
     }
 
 }

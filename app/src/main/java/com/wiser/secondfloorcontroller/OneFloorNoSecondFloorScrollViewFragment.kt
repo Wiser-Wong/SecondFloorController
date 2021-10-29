@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -13,11 +14,11 @@ import androidx.viewpager.widget.ViewPager
 import com.wiser.secondfloor.ScreenTools
 import com.wiser.secondfloor.SecondFloorOverController
 
-class OneFloorRecyclerViewFragment : Fragment() {
+class OneFloorNoSecondFloorScrollViewFragment : Fragment() {
 
     companion object {
-        fun newInstance(): OneFloorRecyclerViewFragment {
-            return OneFloorRecyclerViewFragment()
+        fun newInstance(): OneFloorNoSecondFloorScrollViewFragment {
+            return OneFloorNoSecondFloorScrollViewFragment()
         }
     }
 
@@ -26,7 +27,7 @@ class OneFloorRecyclerViewFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.one_floor_recyclerview_fragment, container, false)
+        val view = inflater.inflate(R.layout.one_floor_scroll_view_fragment, container, false)
         initView(view)
         return view
     }
@@ -34,13 +35,14 @@ class OneFloorRecyclerViewFragment : Fragment() {
     private fun initView(view: View?) {
         val viewpager: ViewPager? = view?.findViewById(R.id.viewpager)
         val tipView = view?.findViewById<TextView>(R.id.tv_pull_tip)
+        val scrollview = view?.findViewById<NestedScrollView>(R.id.scrollview)
 
         val recyclerView: RecyclerView? = view?.findViewById(R.id.rlv_one_floor)
         recyclerView?.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = OneFloorAdapter()
         }
-        parentFragment()?.getController()?.addScrollListView(recyclerView)
+        parentFragment()?.getController()?.addScrollListView(scrollview)
 
         val fragments: MutableList<Fragment> = mutableListOf()
         fragments.add(VpFragment.newInstance(R.mipmap.aa))
@@ -114,9 +116,9 @@ class OneFloorRecyclerViewFragment : Fragment() {
     /**
      * 父Fragment
      */
-    fun parentFragment(): SecondFloorFragment? {
-        if (this@OneFloorRecyclerViewFragment.parentFragment is SecondFloorFragment) {
-            return (this@OneFloorRecyclerViewFragment.parentFragment as SecondFloorFragment)
+    fun parentFragment(): OneFloorNoSecondFloorFragment? {
+        if (this@OneFloorNoSecondFloorScrollViewFragment.parentFragment is OneFloorNoSecondFloorFragment) {
+            return (this@OneFloorNoSecondFloorScrollViewFragment.parentFragment as OneFloorNoSecondFloorFragment)
         }
         return null
     }

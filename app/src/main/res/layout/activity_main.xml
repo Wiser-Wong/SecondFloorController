@@ -10,24 +10,48 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="二楼支持RecyclerView"
-        android:onClick="skipSecondFloorRecyclerView"/>
+        android:onClick="skipOneFloorHasSecondFloorRecyclerView"/>
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="二楼支持ScrollView"
-        android:onClick="skipSecondFloorScrollView"/>
+        android:onClick="skipOneFloorHasSecondFloorScrollView"/>
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="二楼支持WebView"
-        android:onClick="skipSecondFloorWebView"/>
+        android:onClick="skipOneFloorHasSecondFloorWebView"/>
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="二楼支持非列表"
-        android:onClick="skipSecondFloorNoList"/>
+        android:onClick="skipOneFloorHasSecondFloorNoList"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="只有一楼RecyclerView"
+        android:onClick="skipOneFloorNoSecondFloorRecyclerView"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="只有一楼ScrollView"
+        android:onClick="skipOneFloorNoSecondFloorScrollView"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="只有一楼WebView"
+        android:onClick="skipOneFloorNoSecondFloorWebView"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="只有一楼非列表"
+        android:onClick="skipOneFloorNoSecondFloorNoList"/>
 
 </LinearLayout>

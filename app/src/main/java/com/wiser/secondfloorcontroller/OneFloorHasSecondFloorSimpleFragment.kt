@@ -6,11 +6,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 
-class OneFloorSimpleFragment : Fragment() {
+class OneFloorHasSecondFloorSimpleFragment : Fragment() {
 
     companion object {
-        fun newInstance(): OneFloorSimpleFragment {
-            return OneFloorSimpleFragment()
+        fun newInstance(): OneFloorHasSecondFloorSimpleFragment {
+            return OneFloorHasSecondFloorSimpleFragment()
         }
     }
 
