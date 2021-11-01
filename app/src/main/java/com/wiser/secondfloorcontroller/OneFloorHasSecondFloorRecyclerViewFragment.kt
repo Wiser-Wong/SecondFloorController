@@ -40,6 +40,7 @@ class OneFloorHasSecondFloorRecyclerViewFragment : Fragment() {
             layoutManager = LinearLayoutManager(context)
             adapter = OneFloorAdapter()
         }
+        parentFragment()?.getController()?.setRefreshingBackAnim(false)
         parentFragment()?.getController()?.addScrollListView(recyclerView)
 
         val fragments: MutableList<Fragment> = mutableListOf()
@@ -109,6 +110,7 @@ class OneFloorHasSecondFloorRecyclerViewFragment : Fragment() {
             })
 
 //        parentFragment()?.getController()?.setOverlapDistance(0)
+        parentFragment()?.getController()?.setGuideAnim()
     }
 
     /**

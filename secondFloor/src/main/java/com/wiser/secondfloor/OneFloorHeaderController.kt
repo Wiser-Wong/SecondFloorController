@@ -93,10 +93,6 @@ class OneFloorHeaderController(context: Context, attrs: AttributeSet) :
             R.styleable.SecondFloorOverController_sfc_is_refreshing_back_anim,
             isRefreshingBackAnim
         )
-        isRefreshingBackAnim = ta.getBoolean(
-            R.styleable.SecondFloorOverController_sfc_is_refreshing_back_anim,
-            isRefreshingBackAnim
-        )
         isNoSecondFloor = ta.getBoolean(
             R.styleable.SecondFloorOverController_sfc_is_no_second_floor,
             isNoSecondFloor
@@ -149,6 +145,46 @@ class OneFloorHeaderController(context: Context, attrs: AttributeSet) :
             headerHeight,
             isNoSecondFloor
         )
+    }
+
+    /**
+     * 设置刷新中是否回弹
+     */
+    fun setRefreshingBackAnim(isRefreshingBackAnim: Boolean) {
+        this.isRefreshingBackAnim = isRefreshingBackAnim
+        oneFloorController?.setRefreshingBackAnim(isRefreshingBackAnim)
+    }
+
+    /**
+     * 设置二楼是否禁止
+     */
+    fun setNoSecondFloor(isNoSecondFloor: Boolean) {
+        this.isNoSecondFloor = isNoSecondFloor
+        oneFloorController?.setNoSecondFloor(isNoSecondFloor)
+    }
+
+    /**
+     * 设置阻尼摩擦力
+     */
+    fun setFrictionValue(frictionValue: Float) {
+        this.frictionValue = frictionValue
+        oneFloorController?.setFrictionValue(frictionValue)
+    }
+
+    /**
+     * 设置可以刷新时的距离
+     */
+    fun setPullRefreshMaxDistance(pullRefreshMaxDistance: Int) {
+        this.pullRefreshMaxDistance = pullRefreshMaxDistance
+        oneFloorController?.setPullRefreshMaxDistance(pullRefreshMaxDistance)
+    }
+
+    /**
+     * 设置进入二楼时的距离
+     */
+    fun setContinuePullIntoTwoFloorDistance(continuePullIntoTwoFloorDistance: Int) {
+        this.continuePullIntoTwoFloorDistance = continuePullIntoTwoFloorDistance
+        oneFloorController?.setContinuePullIntoTwoFloorDistance(continuePullIntoTwoFloorDistance)
     }
 
     fun setGuideAnim() {

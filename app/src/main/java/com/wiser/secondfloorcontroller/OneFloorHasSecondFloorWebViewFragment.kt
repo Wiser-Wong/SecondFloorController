@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
 import androidx.fragment.app.Fragment
+import com.wiser.secondfloor.ScreenTools
 
 class OneFloorHasSecondFloorWebViewFragment : Fragment() {
 
@@ -33,6 +34,9 @@ class OneFloorHasSecondFloorWebViewFragment : Fragment() {
         webSettings?.javaScriptEnabled = true
         webView?.loadUrl("https://www.baidu.com")
 
+        parentFragment()?.getController()?.setFrictionValue(2.0f)
+        parentFragment()?.getController()?.setPullRefreshMaxDistance(ScreenTools.dip2px(context,80f))
+        parentFragment()?.getController()?.setContinuePullIntoTwoFloorDistance(ScreenTools.dip2px(context,150f))
         parentFragment()?.getController()?.addScrollListView(webView)
 
     }

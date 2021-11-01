@@ -740,6 +740,41 @@ class OneFloorController(context: Context, attrs: AttributeSet) : FrameLayout(co
     fun isGuideStatus(): Boolean = isGuideStatus
 
     /**
+     * 设置刷新中是否回弹
+     */
+    fun setRefreshingBackAnim(isRefreshingBackAnim: Boolean) {
+        this.isRefreshingBackAnim = isRefreshingBackAnim
+    }
+
+    /**
+     * 设置二楼是否禁止
+     */
+    fun setNoSecondFloor(isNoSecondFloor: Boolean) {
+        this.isNoSecondFloor = isNoSecondFloor
+    }
+
+    /**
+     * 设置阻尼摩擦力
+     */
+    fun setFrictionValue(frictionValue: Float) {
+        this.frictionValue = frictionValue
+    }
+
+    /**
+     * 设置可以刷新时的距离
+     */
+    fun setPullRefreshMaxDistance(pullRefreshMaxDistance: Int) {
+        this.pullRefreshMaxDistance = pullRefreshMaxDistance
+    }
+
+    /**
+     * 设置进入二楼时的距离
+     */
+    fun setContinuePullIntoTwoFloorDistance(continuePullIntoTwoFloorDistance: Int) {
+        this.continuePullIntoTwoFloorDistance = continuePullIntoTwoFloorDistance
+    }
+
+    /**
      * 添加滑动控件
      */
     fun addScrollListView(view: View?) {

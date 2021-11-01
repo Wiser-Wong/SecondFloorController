@@ -322,18 +322,20 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
             headerMarginLayoutParams?.topMargin = screenHeight - pullRefreshMaxDistance
         }
 
-        (oneFloorFrameLayout as? OneFloorHeaderController)?.initOneFloorHeaderController(
-            screenHeight,
-            currentItemIndex,
-            frictionValue,
-            isInterceptOneFloorTouch,
-            isRefreshingBackAnim,
-            initTranslationY,
-            pullRefreshMaxDistance,
-            continuePullIntoTwoFloorDistance,
-            headerHeight,
-            isNoSecondFloor
-        )
+        if (isOver) {
+            (oneFloorFrameLayout as? OneFloorHeaderController)?.initOneFloorHeaderController(
+                screenHeight,
+                currentItemIndex,
+                frictionValue,
+                isInterceptOneFloorTouch,
+                isRefreshingBackAnim,
+                initTranslationY,
+                pullRefreshMaxDistance,
+                continuePullIntoTwoFloorDistance,
+                headerHeight,
+                isNoSecondFloor
+            )
+        }
 
         if (isOver) {
             when (currentItemIndex) {
@@ -983,6 +985,56 @@ class SecondFloorOverController(context: Context, attrs: AttributeSet) :
             ?: PULL_ONE_FLOOR else pullFloorStatus
 
     fun isGuideStatus(): Boolean = isGuideStatus
+
+    /**
+     * 设置刷新中是否回弹
+     */
+    fun setRefreshingBackAnim(isRefreshingBackAnim: Boolean) {
+        this.isRefreshingBackAnim = isRefreshingBackAnim
+        if (isOver) {
+            (oneFloorFrameLayout as OneFloorHeaderController?)?.setRefreshingBackAnim(isRefreshingBackAnim)
+        }
+    }
+
+    /**
+     * 设置二楼是否禁止
+     */
+    fun setNoSecondFloor(isNoSecondFloor: Boolean) {
+        this.isNoSecondFloor = isNoSecondFloor
+        if (isOver) {
+            (oneFloorFrameLayout as OneFloorHeaderController?)?.setNoSecondFloor(isNoSecondFloor)
+        }
+    }
+
+    /**
+     * 设置阻尼摩擦力
+     */
+    fun setFrictionValue(frictionValue: Float) {
+        this.frictionValue = frictionValue
+        if (isOver) {
+            (oneFloorFrameLayout as OneFloorHeaderController?)?.setFrictionValue(frictionValue)
+        }
+    }
+
+    /**
+     * 设置可以刷新时的距离
+     */
+    fun setPullRefreshMaxDistance(pullRefreshMaxDistance: Int) {
+        this.pullRefreshMaxDistance = pullRefreshMaxDistance
+        if (isOver) {
+            (oneFloorFrameLayout as OneFloorHeaderController?)?.setPullRefreshMaxDistance(pullRefreshMaxDistance)
+        }
+    }
+
+    /**
+     * 设置进入二楼时的距离
+     */
+    fun setContinuePullIntoTwoFloorDistance(continuePullIntoTwoFloorDistance: Int) {
+        this.continuePullIntoTwoFloorDistance = continuePullIntoTwoFloorDistance
+        if (isOver) {
+            (oneFloorFrameLayout as OneFloorHeaderController?)?.setContinuePullIntoTwoFloorDistance(continuePullIntoTwoFloorDistance)
+        }
+    }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)

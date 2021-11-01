@@ -42,6 +42,7 @@ class OneFloorHasSecondFloorScrollViewFragment : Fragment() {
             layoutManager = LinearLayoutManager(context)
             adapter = OneFloorAdapter()
         }
+        parentFragment()?.getController()?.setFrictionValue(4.0f)
         parentFragment()?.getController()?.addScrollListView(scrollview)
 
         val fragments: MutableList<Fragment> = mutableListOf()

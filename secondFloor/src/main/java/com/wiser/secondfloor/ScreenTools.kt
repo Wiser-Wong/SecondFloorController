@@ -12,10 +12,10 @@ class ScreenTools {
          *
          * @return
          */
-        fun getScreenDPI(context: Context): Int {
+        fun getScreenDPI(context: Context?): Int {
             var dpi = 0
             val windowManager = (context
-                .getSystemService(Context.WINDOW_SERVICE) as WindowManager)
+                ?.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
             val display = windowManager.defaultDisplay
             val displayMetrics = DisplayMetrics()
             val c: Class<*>
@@ -35,8 +35,8 @@ class ScreenTools {
          *
          * @return
          */
-        fun getScreenHeight(context: Context): Int {
-            return context.resources.displayMetrics.heightPixels
+        fun getScreenHeight(context: Context?): Int {
+            return context?.resources?.displayMetrics?.heightPixels?:0
         }
 
         /**
@@ -45,8 +45,8 @@ class ScreenTools {
          * @param dpValue
          * @return
          */
-        fun dip2px(context: Context, dpValue: Float): Int {
-            val scale: Float = context.resources.displayMetrics.density
+        fun dip2px(context: Context?, dpValue: Float): Int {
+            val scale: Float = context?.resources?.displayMetrics?.density?:1f
             return (dpValue * scale + 0.5f).toInt()
         }
 
@@ -56,8 +56,8 @@ class ScreenTools {
          * @param pxValue
          * @return
          */
-        fun px2dip(context: Context, pxValue: Float): Int {
-            val scale: Float = context.resources.displayMetrics.density
+        fun px2dip(context: Context?, pxValue: Float): Int {
+            val scale: Float = context?.resources?.displayMetrics?.density?:1f
             return (pxValue / scale + 0.5f).toInt()
         }
 
@@ -67,9 +67,9 @@ class ScreenTools {
          * @param pxValue
          * @return
          */
-        fun px2sp(context: Context, pxValue: Float): Int {
+        fun px2sp(context: Context?, pxValue: Float): Int {
             val fontScale: Float =
-                context.resources.displayMetrics.scaledDensity
+                context?.resources?.displayMetrics?.scaledDensity?:1f
             return (pxValue / fontScale + 0.5f).toInt()
         }
 
@@ -79,9 +79,9 @@ class ScreenTools {
          * @param spValue
          * @return
          */
-        fun sp2px(context: Context, spValue: Float): Int {
+        fun sp2px(context: Context?, spValue: Float): Int {
             val fontScale: Float =
-                context.resources.displayMetrics.scaledDensity
+                context?.resources?.displayMetrics?.scaledDensity?:1f
             return (spValue * fontScale + 0.5f).toInt()
         }
     }

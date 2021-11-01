@@ -131,7 +131,7 @@ class OneFloorHasSecondFloorFragment : Fragment() {
             }
         })
 
-        overController?.setGuideAnim()
+//        overController?.setGuideAnim()
 
         backPress(view)
     }
