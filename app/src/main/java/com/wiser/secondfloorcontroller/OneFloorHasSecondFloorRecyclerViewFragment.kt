@@ -41,6 +41,7 @@ class OneFloorHasSecondFloorRecyclerViewFragment : Fragment() {
             adapter = OneFloorAdapter()
         }
         parentFragment()?.getController()?.setRefreshingBackAnim(false)
+        parentFragment()?.getController()?.setOverlapDistance(viewpager)
         parentFragment()?.getController()?.addScrollListView(recyclerView)
 
         val fragments: MutableList<Fragment> = mutableListOf()
@@ -61,6 +62,7 @@ class OneFloorHasSecondFloorRecyclerViewFragment : Fragment() {
 //                }
                 val distance: Int = activity?.let { ScreenTools.dip2px(it, 50f) } ?: 0
                 tipView?.alpha = scrollY / distance
+                viewpager?.alpha = 1- (scrollY / ScreenTools.dip2px(activity, 200f))
             }
         })
 
