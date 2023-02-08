@@ -36,12 +36,17 @@ class OneFloorHasSecondFloorFragment : Fragment() {
     }
 
     private fun initView(view: View?) {
+        // 控件
         overController = view?.findViewById(R.id.controller)
+        // 一楼View
         val oneView = LayoutInflater.from(activity)
             .inflate(R.layout.main_one_floor_layout, overController, false)
+        // 二楼View
         val twoView = LayoutInflater.from(activity)
             .inflate(R.layout.main_two_floor_layout, overController, false)
+        // Fragment替换
         when (arguments?.getString(SKIP_TYPE)) {
+            // recyclerView
             SkipType.RECYCLERVIEW.type -> {
                 childFragmentManager.beginTransaction()
                     .replace(
@@ -50,6 +55,7 @@ class OneFloorHasSecondFloorFragment : Fragment() {
                         OneFloorHasSecondFloorRecyclerViewFragment::javaClass.name
                     ).commitAllowingStateLoss()
             }
+            // ScrollView
             SkipType.SCROLLVIEW.type -> {
                 childFragmentManager.beginTransaction()
                     .replace(
@@ -58,6 +64,7 @@ class OneFloorHasSecondFloorFragment : Fragment() {
                         OneFloorHasSecondFloorScrollViewFragment::javaClass.name
                     ).commitAllowingStateLoss()
             }
+            // WebView
             SkipType.WEBVIEW.type -> {
                 childFragmentManager.beginTransaction()
                     .replace(
@@ -66,6 +73,7 @@ class OneFloorHasSecondFloorFragment : Fragment() {
                         OneFloorHasSecondFloorWebViewFragment::javaClass.name
                     ).commitAllowingStateLoss()
             }
+            // 没有滑动控件
             SkipType.NOLIST.type -> {
                 childFragmentManager.beginTransaction()
                     .replace(
@@ -83,13 +91,19 @@ class OneFloorHasSecondFloorFragment : Fragment() {
                 TwoFloorFragment.newInstance(),
                 TwoFloorFragment::javaClass.name
             ).commitAllowingStateLoss()
+        // 添加一楼View
         overController?.addOneFloorView(oneView)
+        // 添加二楼View
         overController?.addTwoFloorView(twoView)
 
+        // 头部
         val headerView =
             LayoutInflater.from(activity).inflate(R.layout.pull_header, overController, false)
+        // 提示
         val tipView = headerView?.findViewById<TextView>(R.id.tv_pull_tip)
+        // 添加头部View
         overController?.addHeaderView(headerView)
+        // 添加下拉刷新监听
         overController?.addOnPullRefreshListener(object :
             SecondFloorOverController.OnPullRefreshListener {
             override fun onPullStatus(status: Int) {
@@ -123,6 +137,7 @@ class OneFloorHasSecondFloorFragment : Fragment() {
 
             }
         })
+        // 添加滚动监听
         overController?.addOnPullScrollListener(object :
             SecondFloorOverController.OnPullScrollListener {
 
@@ -133,6 +148,7 @@ class OneFloorHasSecondFloorFragment : Fragment() {
 
 //        overController?.setGuideAnim()
 
+        // 返回按键
         backPress(view)
     }
 
